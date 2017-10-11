@@ -28,7 +28,7 @@ elem2 = Add (Literal 1) (Literal 123)
 f : Elem n -> Integer
 f x = case x of
   Literal val => val
-        --Add' lhs rhs => true 
+  Add lhs rhs => 123 
 
 -- main : IO ()
 --main = print (f elem1)
