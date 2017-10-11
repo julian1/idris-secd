@@ -11,17 +11,18 @@ elem1 : Elem 456
 elem1 = Literal 456
 
 
+
+
 {-
 elem2 : Elem 123
 elem2 = Add (Literal 1) (Literal 123)
 -}
 
 
-{-
 
-  f : Elem -> Bool
-  f x = case x of
-          Literal' n => true
-          --Add' lhs rhs => true 
 
--} 
+f : Elem 456 -> Bool
+f x = case x of
+        Literal n => True
+        --Add' lhs rhs => true 
+
