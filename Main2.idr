@@ -1,29 +1,26 @@
+{-
+    simple gas expression...
+
+-}
 
 -- ok, don't knwo that we can even encode what we want...
 -- perhaps we 
 
-data Elem : Integer -> Type where
+data Expr : Integer -> Type where
 
-  -- Literal : Integer -> {gas : Integer} -> Elem gas
-  Literal : Integer -> Elem 1             -- eg. pushing on stack is one gas. 
-  Add : Elem x -> Elem y -> Elem ( x + y + 1 )
+  -- Literal : Integer -> {gas : Integer} -> Expr gas
+  Literal : Integer -> Expr 1             -- eg. pushing on stack is one gas. 
+  Add : Expr x -> Expr y -> Expr ( x + y + 1 )
 
---  Add : {a : Elem  x }  -> Elem y -> Elem ( x + y + 1 )
---   There : {x,y:a} -> {xs:Vect n a} -> IsElem x xs -> IsElem x (y :: xs)
-  -- can we put a deriving...
-
-
-
-elem1 : Elem 1 
-elem1 = Literal 456
 
 -- this is correct cost is 3 gas
-elem2 : Elem 3
+elem2 : Expr 3
 elem2 = Add (Literal 456) (Literal 3)
 
 
+-- OK - we want to change this to be an evaluation function
 
-f : Elem n -> Integer
+f : Expr n -> Integer
 f x = case x of
   Literal val => val
   Add lhs rhs => 123 
@@ -33,6 +30,6 @@ f x = case x of
 
 
 main : IO ()
-main = print (f elem1)
+main = print (f elem2)
 
 
