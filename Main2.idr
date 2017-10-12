@@ -15,21 +15,21 @@ data Expr : Integer -> Type where
 
 -- this is correct cost is 3 gas
 elem2 : Expr 3
-elem2 = Add (Literal 456) (Literal 3)
+elem2 = Add (Literal 102) (Literal 103)
 
 
 -- OK - we want to change this to be an evaluation function
 
-f : Expr n -> Integer
-f x = case x of
+eval : Expr n -> Integer
+eval x = case x of
   Literal val => val
-  Add lhs rhs => 123 
+  Add lhs rhs => eval lhs + eval rhs 
 
 -- So I suspect the gas is not bound...
 -- OK - this may not be able to be resolved because we don't know gas
 
 
 main : IO ()
-main = print (f elem2)
+main = print (eval elem2)
 
 
