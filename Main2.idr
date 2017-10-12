@@ -13,11 +13,11 @@ data Elem : Integer -> Type where
   -- can we put a deriving...
 
 
+
 elem1 : Elem 1 
 elem1 = Literal 456
 
-
--- we have to express the gas cost...
+-- this is correct cost is 3 gas
 elem2 : Elem 3
 elem2 = Add (Literal 456) (Literal 3)
 
