@@ -1,3 +1,47 @@
+
+  -- Add : Expr x -> Expr y -> Expr ( sub1 ( plus  x y))      -- adding should pop2 and add 1 - should be -1 - need to subtrac
+  -- Add : Expr x -> Expr y -> Expr ( ( plus1  x y))      -- adding should pop2 and add 1 - should be -1 - need to subtrac
+                                                  -- this should be a substraction... 
+
+-- so we can know the amount of gas at compile time - and then limit what it does... 
+-- we should also be able to evaluate it... 
+-- we probably don't even need to embed the gas cost directly in the types...
+-- we can embed it, in a evm compilation strategy... instead. which
+-- eg. so that we can record stack use information 
+
+-- we need a kecakk thing - so we can place code...
+
+{-
+expr' : Expr 1
+expr' = 102
+-}
+ 
+
+-- add : (x : Nat) -> (y : Nat) -> {auto smaller' : LT x y} -> Nat
+-- this is correct cost is 3 gas
+-- how do we express that we don't care about the value
+
+-- n is being treated as a Nat rather than an integer
+-- expr : { auto blah : n  } -> Expr n
+-- auto prf : d > 0 = True} 
+-- expr : { auto prf : n > 0 = True } -> Expr n
+
+-- expr : { auto blah : n > 0 = True } -> Expr n
+-- 
+-- expr : Expr 5
+-- {a:Type}
+-- index : {a:Type} -> {n:Nat} -> Fin n -> Vect n a -> a
+-- expr : {n:Nat} -> Expr n
+
+-- I think we're making the mistake... here - of having something percolate up....
+-- WHERE AS IF WE HAD A CLEAR EXPRESSION - then we could instead construct
+-- a proof of the value of some gas expression
+
+-- this isn't correct - we could specify the proof on the evaluation function of expr ...
+
+-- expr : { auto blah : n > 0 = True } -> Expr n
+
+
 --  Add : {a : Elem  x }  -> Elem y -> Elem ( x + y + 1 )
 --   There : {x,y:a} -> {xs:Vect n a} -> IsElem x xs -> IsElem x (y :: xs)
   -- can we put a deriving...

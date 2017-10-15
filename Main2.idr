@@ -1,13 +1,25 @@
 {-
     pushing stack usage into the expression...
 
+  this is wrong - it should be the maximum stack use needed to evaluate the 
+  expression.
+
+  What’s happening here is that the Idris standard library defines plus on Nat
+  in such a way that the Idris compiler can easily see that 1 + n is equal to S
+  n, but cannot easily see this about n + 1:
 -}
+
+-- ok, I thnink we need a rewrite? 
+
+-- sub1 : Nat -> Nat
+-- sub1 (S k) = k 
 
 
 data Expr : (depth : Nat) -> Type where
   Literal : Integer -> Expr 1                     -- eg. pushing on stack is one gas.
-  Add : Expr x -> Expr y -> Expr ( x +  y    )      -- adding should pop2 and add 1 - should be -1 - need to subtrac
-                                                  -- this should be a substraction... 
+  -- Add : Expr x -> Expr y -> Expr ( sub1 ( x + y))      -- adding should pop2 and add 1 - should be -1 - need to subtrac
+  Add : Expr (S x) -> Expr (S y) -> Expr (x + y + 1)
+
 
 -- evaluate expression recursively
 eval : Expr n -> Integer
@@ -16,9 +28,8 @@ eval x = case x of
   Add lhs rhs => eval lhs + eval rhs
 
 
--- if evaluating the expression would exceed the stack, it will fail to typecheck
+-- evaluating should leave a single value on the stack
 eval' : Expr n -> { auto condition : LT n 6 } -> Integer
--- eval' : Expr n -> { auto condition : LT n 6 } -> Integer
 eval' x = eval x
 
 
@@ -31,9 +42,10 @@ gen x = case x of
 
 
 -- expr : { n : Nat } -> Expr n
-expr :  Expr 3
+expr :  Expr 1
 expr =
   Add (Add (Literal 102) (Literal 103)) (Literal 104)
+  -- Add (Literal 102) (Literal 103) 
 
 -- ok we want to expose the inner argument...
 
