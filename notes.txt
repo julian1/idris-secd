@@ -1,0 +1,9 @@
+--  Add : {a : Elem  x }  -> Elem y -> Elem ( x + y + 1 )
+--   There : {x,y:a} -> {xs:Vect n a} -> IsElem x xs -> IsElem x (y :: xs)
+  -- can we put a deriving...
+
+
+
+elem1 : Elem 1 
+elem1 = Literal 456
+
