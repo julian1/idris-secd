@@ -106,7 +106,18 @@ expr =
 data OpCode : Type where
   ADD : OpCode
   PUSH : OpCode
-  Val : Bits8 -> OpCode
+  JUMPDEST : OpCode
+  JUMPI : OpCode
+  VAL : Bits8 -> OpCode
+
+
+human : OpCode -> String 
+human expr = case expr of
+  ADD => "add"
+  PUSH => "push"
+  JUMPI => "jumpi"
+  JUMPDEST => "jumpdest"
+  VAL bits8 => "0x" ++ b8ToHexString bits8
 
 
 
@@ -115,22 +126,10 @@ gen : Expr -> List OpCode
 --String
 gen x = case x of
   Number val => 
-    -- push val
-    let v = prim__truncBigInt_B8 val
-        -- hex = b8ToHexString v 
-    in
-    --"60" ++ hex -- 
-    -- Not sure if we 
-    PUSH :: Val v :: Nil
-    -- PUSH :: Nil
+    let v = prim__truncBigInt_B8 val in
+    [ PUSH , VAL v ] 
 
   Add lhs rhs => 
-    {-
-    gen lhs
-    -- now compute the pos and pass that down...
-    ++ gen rhs 
-    ++ "01"
-    -}
     ADD :: (gen rhs) ++ (gen lhs) --  are we doing this around the right way
                                     -- eg. lhs should be first, 
                                           
@@ -143,11 +142,13 @@ gen x = case x of
     let c = gen cond
         l = gen lhs
         r = gen rhs
-        --ll = toIntegerNat $ length l
+        ll = toIntegerNat $ length l
         --lr = toIntegerNat $ length r
         -- toIntegerNat $ l + 1000
     in
-    PUSH :: Nil
+    -- r :: l :: c :: Nil
+    r ++ l ++ [JUMPI ] ++ c 
+    -- PUSH :: Nil
    
     {- 
     c ++ "jumpi"
@@ -203,4 +204,17 @@ gen x = case x of
     ++ gen rhs 
     ++ "add\n"
 -}
-
+    {-
+    gen lhs
+    -- now compute the pos and pass that down...
+    ++ gen rhs 
+    ++ "01"
+    -}
+{-
+    -- push val
+    let v = prim__truncBigInt_B8 val
+        -- hex = b8ToHexString v 
+    in
+    --"60" ++ hex -- 
+    -- Not sure if we 
+-}
