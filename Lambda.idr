@@ -99,20 +99,41 @@ expr =
 -- then convert to hex later...
 -- Actually, use a list of the Bits8 type
 
-gen : Expr -> String
+--- We should define the opcodes 
+
+-- opcode : Type  
+
+data OpCode : Type where
+  ADD : OpCode
+  PUSH : OpCode
+  Val : Bits8 -> OpCode
+
+
+
+gen : Expr -> List OpCode
+-- gen : Expr -> List Bits8
+--String
 gen x = case x of
   Number val => 
     -- push val
     let v = prim__truncBigInt_B8 val
-        hex = b8ToHexString v 
+        -- hex = b8ToHexString v 
     in
-    "60" ++ hex
+    --"60" ++ hex -- 
+    -- Not sure if we 
+    PUSH :: Val v :: Nil
+    -- PUSH :: Nil
 
   Add lhs rhs => 
+    {-
     gen lhs
     -- now compute the pos and pass that down...
     ++ gen rhs 
     ++ "01"
+    -}
+    ADD :: (gen rhs) ++ (gen lhs) --  are we doing this around the right way
+                                    -- eg. lhs should be first, 
+                                          
   
   -- ok, the issue is generating the labels...
   -- we're going to need to compute the instruction count..... 
@@ -122,15 +143,17 @@ gen x = case x of
     let c = gen cond
         l = gen lhs
         r = gen rhs
-        ll = toIntegerNat $ length l
-        lr = toIntegerNat $ length r
+        --ll = toIntegerNat $ length l
+        --lr = toIntegerNat $ length r
         -- toIntegerNat $ l + 1000
     in
-    
+    PUSH :: Nil
+   
+    {- 
     c ++ "jumpi"
     ++ l ++ "jump end"         -- true we fall through...
     ++ "jumpdest" ++ r    -- false 
-
+    -}
 
 
 
@@ -139,12 +162,19 @@ id:  Expr
 id =
   Lambda "x" (Variable "x") 
 
+j : List Bits8
+j = 0 :: [ 0, 0x60 ]
 
 main : IO ()
 main = do
+
+  -- let yy = (the 0x123 Bits8 ) : j in 
+  --let yy = 123 :: j in 
+
   -- Apply id Number 123
   putStrLn "hi" 
-  putStrLn $ gen expr 
+  -- putStrLn $ gen expr 
+  -- let yy = [ 1,2 ] ++  [4,5]
 
 
 {-
