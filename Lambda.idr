@@ -156,7 +156,7 @@ gen x = case x of
          -- [ JUMPDEST ] ++ r  ++ [ JUMP,  ADD, PC, VAL 0x2, PUSH ] 
          [ JUMPDEST ] ++ r  ++ [ JUMPDEST ]  
 
-      ++ [ JUMP,  ADD, PC, VAL 0x5, PUSH ] 
+      ++ [ JUMP,  ADD, PC, VAL $ prim__truncBigInt_B8 (lr + 4), PUSH ] 
 
       ++ l ++ [ JUMPI, ADD, PC, VAL $ prim__truncBigInt_B8 (ll + 8), PUSH ] ++ c
 
@@ -166,7 +166,7 @@ gen x = case x of
 expr :  Expr
 expr =
   -- Add (Add (Number 10) (Number 1)) (Number 1)
-  If (Number 1) (Number 0xff ) (Number 0xee)
+  If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
 
 
 main : IO ()
