@@ -68,9 +68,11 @@ data Expr : Type where
 
   -- lambda args - placeholders
   -- change to Integer for the placehodl
+  -- should be able to remove
   Arg1 : Expr
   Arg2 : Expr
 
+{-
   Variable : String -> Expr           -- a (bound) variable in a lambda term.
 
   -- Lambda : String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
@@ -79,6 +81,7 @@ data Expr : Type where
   -- Apply : Expr -> Expr -> Expr        -- eg. (\x -> x) 123
                                        -- we also need to have a symbol for replacement ...
 
+-}
   Apply : Expr -> Expr        -- eg. (\x -> x) 123
 {-
   -- argument gets pushed on the stack.
@@ -189,6 +192,8 @@ compile expr = case expr of
   Arg1 => [] 
   Arg2 => [] 
 
+  -- look after a function
+  -- can do something similar for arguments - eg. to evaluate them once.
   Apply e => 
       compile e
       -- and then pop off any arguments...
@@ -228,6 +233,9 @@ ifthenelse = If
 
 
 -- This can be a placeholder for a function...
+-- may want to specify function2 and function1 and function0, that way 
+-- we know how to clean up the stack... 
+-- also to compile - we have test args...
 function : Expr -> Expr 
 function expr = Apply expr 
 
@@ -248,9 +256,10 @@ myfunc3: Expr -> Expr
 myfunc3 c = 
   function $
     ifthenelse c 
-      ((Number 0x01) `add` (Number 0x01))  
-      (Number 0x02)
+      ((Number 1) `add` (Number 1))  
+      (Number 122)
    
+-- note that when we have a full tree - then we can do stuff... - like force eva
 
 
 -- ok - we use bind?
@@ -270,8 +279,8 @@ myfunc3 c =
 -- this is a high level parsing construct - we really only need the variable... 
 -- Ahhh. actually it would be nice to deal with free variables
 
-id:  Expr
-id = Lambda [ "x" ] (Variable "x")
+-- id:  Expr
+--id = Lambda [ "x" ] (Variable "x")
 
 -- an expr node has a type... eg. number...
 -- but a lambda symbol doesn't....
@@ -283,7 +292,8 @@ main = do
   putStrLn "hi"
 
   -- let ops = compile expr
-  let ops = compile $ myfunc2 Arg1 Arg2
+  -- let ops = compile $ myfunc2 Arg1 Arg2
+  let ops = compile $ myfunc3 Arg1 
   let hops = map human ops
   let mops = foldl (++) "" $ map machine ops
 
