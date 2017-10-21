@@ -171,7 +171,8 @@ expr :  Expr
 expr =
   -- Add (Add (Number 10) (Number 1)) (Number 1)
   -- If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
-  If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
+  -- If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
+  If (Number 1) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
 
 
 main : IO ()
