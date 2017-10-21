@@ -87,7 +87,7 @@ data Expr : Type where
 
 ---- IMPORTANT - we do have the PC . so we can do relative label. with just add and a jump
 
--- gen : Expr -> (pos: Integer) -> String
+-- compile : Expr -> (pos: Integer) -> String
 -- OK - we can get away with relative jump labels, which. and we can use the strlen to compute positions
 
 -- OK rather than using hex - we should almost certainly just use a linked list of bytes.
@@ -137,47 +137,34 @@ machine expr = case expr of
 
 
 
-gen : Expr -> List OpCode
--- gen : Expr -> List Bits8
---String
-gen x = case x of
+compile : Expr -> List OpCode
+compile expr = case expr of
   Number val =>
     -- let v = prim__truncBigInt_B8 val in
     let v = fromInteger val in
     [ PUSH, VAL v ]
 
   Add lhs rhs =>
-    (gen lhs) ++ (gen rhs) ++ [ ADD ] --  are we doing this around the right way
+    (compile lhs) ++ (compile rhs) ++ [ ADD ] --  are we doing this around the right way
   
   -- relative jump labeling
+  -- none of this list concat is efficient. probably should use join/flatten 
   If cond lhs rhs =>
-    let c = gen cond
-        l = gen lhs
-        r = gen rhs
+    let c = compile cond
+        l = compile lhs
+        r = compile rhs
         ll = toIntegerNat $ length l
         lr = toIntegerNat $ length r
     in
       c ++ [ ISZERO ]
       ++ [ PUSH, VAL $ fromInteger (ll + 8), PC, ADD, JUMPI ] 
-      ++ l 
-      ++ [ PUSH, VAL $ fromInteger (lr + 4), PC, ADD, JUMP, JUMPDEST ] 
+      ++ l  
+      ++ [ PUSH, VAL $ fromInteger (lr + 4), PC, ADD, JUMP ] 
+      ++ [ JUMPDEST ] 
       ++ r  
       ++ [ JUMPDEST ] 
 
-{-
-      [ JUMPDEST ] 
-      ++ r  
-      ++ [ JUMPDEST, JUMP,  ADD, PC, VAL $ fromInteger (lr + 4), PUSH ] 
-      ++ l 
-      ++ [ JUMPI, ADD, PC, VAL $ fromInteger (ll + 8), PUSH ] 
-      ++ [ ISZERO ] ++ c
--}
 
-
--- reading this stuff backwards is hellish....
-
--- OK - so we can just reverse the order of the evaluation????
--- so true?
 
 expr :  Expr
 expr =
@@ -187,12 +174,26 @@ expr =
   -- If (Number 0) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
 
 
+
+-- strategy for lambdas --- just expand the rhs - when we get to a variable binding 
+-- we just dup the stack...
+-- actually should probably remove the name? 
+-- the only thing we need to kn
+
+-- this is a high level parsing construct - we really only need the variable... 
+-- Ahhh. actually it would be nice to deal with free variables
+
+id:  Expr
+id = Lambda "x" (Variable "x")
+
+
+
 main : IO ()
 main = do
 
   putStrLn "hi"
 
-  let ops = gen expr
+  let ops = compile expr
   let hops = map human ops
   let mops = foldl (++) "" $ map machine ops
 
@@ -208,11 +209,11 @@ id = Lambda "x" (Variable "x")
 
 Apply id Number 123
 
-      -- gen expr
+      -- compile expr
       -- hops = map human ops
 
 
-  -- putStrLn $ gen expr
+  -- putStrLn $ compile expr
   -- let yy = [ 1,2 ] ++  [4,5]
 
   -- let yy = (the 0x123 Bits8 ) : j in
@@ -237,19 +238,19 @@ Apply id Number 123
 {-
 -- Generate evm code...
 -- we need to control the recursion direction
-gen : Expr -> String
-gen x = case x of
+compile : Expr -> String
+compile x = case x of
   Number val =>
     "push " ++ show val ++ "\n" -- ok - the values should be on the stack - need to check how this works...
   Add lhs rhs =>
-    gen lhs
-    ++ gen rhs
+    compile lhs
+    ++ compile rhs
     ++ "add\n"
 -}
     {-
-    gen lhs
+    compile lhs
     -- now compute the pos and pass that down...
-    ++ gen rhs
+    ++ compile rhs
     ++ "01"
     -}
 {-
@@ -260,8 +261,8 @@ gen x = case x of
     --"60" ++ hex --
     -- Not sure if we
 -}
-  -- ok, the issue is generating the labels...
+  -- ok, the issue is compileerating the labels...
   -- we're going to need to compute the instruction count.....
   -- use a different function ... or just return as a tuple?
-  -- if we always push the lhs first... then we might be able to generate the label as we go...
+  -- if we always push the lhs first... then we might be able to compileerate the label as we go...
 
