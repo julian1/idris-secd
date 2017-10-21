@@ -100,6 +100,7 @@ data Expr : Type where
 
 data OpCode : Type where
   ADD : OpCode
+  ISZERO : OpCode
   PUSH : OpCode
   JUMP : OpCode
   JUMPI : OpCode
@@ -111,6 +112,7 @@ data OpCode : Type where
 human : OpCode -> String
 human expr = case expr of
   ADD => "add"
+  ISZERO => "not"
   PUSH => "push"
   JUMP => "jump"
   JUMPI => "jumpi"
@@ -124,6 +126,7 @@ human expr = case expr of
 machine : OpCode -> String
 machine expr = case expr of
   ADD => "01"
+  ISZERO => "15"
   PUSH => "60"
   JUMP => "56"
   JUMPI => "57"
@@ -139,7 +142,8 @@ gen : Expr -> List OpCode
 --String
 gen x = case x of
   Number val =>
-    let v = prim__truncBigInt_B8 val in
+    -- let v = prim__truncBigInt_B8 val in
+    let v = fromInteger val in
     [ VAL v, PUSH ]
 
   Add lhs rhs =>
@@ -152,14 +156,16 @@ gen x = case x of
         ll = toIntegerNat $ length l
         lr = toIntegerNat $ length r
     in
-      [ JUMPDEST ] ++ r  ++ [ JUMPDEST ]  
+      [ JUMPDEST ] 
+      ++ r  
+      ++ [ JUMPDEST, JUMP,  ADD, PC, VAL $ fromInteger (lr + 4), PUSH ] 
+      ++ l 
+      ++ [ JUMPI, ADD, PC, VAL $ fromInteger (ll + 8), PUSH ] 
+      ++ [ ISZERO ] ++ c
 
-      ++ [ JUMP,  ADD, PC, VAL $ prim__truncBigInt_B8 (lr + 4), PUSH ] 
 
-      ++ l ++ [ JUMPI, ADD, PC, VAL $ prim__truncBigInt_B8 (ll + 8), PUSH ] ++ c
-
-
---
+-- OK - so we can just reverse the order of the evaluation????
+-- so true?
 
 expr :  Expr
 expr =
