@@ -152,9 +152,7 @@ gen x = case x of
         ll = toIntegerNat $ length l
         lr = toIntegerNat $ length r
     in
-         -- [ JUMPDEST ] ++ r  ++ [ JUMP,  ADD, PC, VAL $ prim__truncBigInt_B8 (lr), PUSH ] 
-         -- [ JUMPDEST ] ++ r  ++ [ JUMP,  ADD, PC, VAL 0x2, PUSH ] 
-         [ JUMPDEST ] ++ r  ++ [ JUMPDEST ]  
+      [ JUMPDEST ] ++ r  ++ [ JUMPDEST ]  
 
       ++ [ JUMP,  ADD, PC, VAL $ prim__truncBigInt_B8 (lr + 4), PUSH ] 
 
@@ -166,7 +164,8 @@ gen x = case x of
 expr :  Expr
 expr =
   -- Add (Add (Number 10) (Number 1)) (Number 1)
-  If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
+  -- If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
+  If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
 
 
 main : IO ()
