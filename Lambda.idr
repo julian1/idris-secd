@@ -1,6 +1,12 @@
--- need to work out jump labels. can then do if/else, light calls, lambda, tail recursion etc.
+-- need to work out jump labels. can then do if/else, light calls, lambda, tail recursion, pairs etc.
+-- problem with code-extraction is that the code is not proved.
+-- problem with low level op-code - is that too far from workable programming - lambdas, free vars, lists. 
+-- stack machinee makes hard.
+-- working at level of expression tree - we don't have types...
 
 -- Like LLL or solidity assembly. But with types.
+
+-- OK we have
 
 {-
 -- what we need is some type of light call syntax. be it a lambda or something else.
@@ -59,6 +65,12 @@ data Expr : Type where
 
   If : Expr  -> Expr  -> Expr -> Expr
 
+
+  -- lambda args - placeholders
+  -- change to Integer for the placehodl
+  Arg1 : Expr
+  Arg2 : Expr
+
   Variable : String -> Expr           -- a (bound) variable in a lambda term.
 
   -- Lambda : String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
@@ -76,6 +88,7 @@ data Expr : Type where
   lambda "x"
 -}
 
+-- variable resolution... do it on parse... 
 
 -- actually we might be able to use a state like monad....
 -- to keep track of the position?
@@ -168,6 +181,11 @@ compile expr = case expr of
       ++ [ JUMPDEST ] 
 
 
+  -- var is on the stack so there's nothing to do...
+  -- actually we want to dup it so we can refer to it again...
+  -- BUT - how do we know to finish at the end of the function
+  Arg1 => [] 
+
 -- so we have a lambda expression. and we have an application... 
 -- (\x -> x + 1) 1. 
 -- the lambda expression can be alpha normalized... which is a transform...
@@ -184,6 +202,32 @@ expr =
   -- If (Number 0) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
 
 
+-- A lambda or function
+-- to be valid in Idris has to take an input Expr and produce an output Expr
+-- input is an arg
+
+-- actually we might have higher level types - and then we evaluate... 
+-- eg. a function that takes the lambda...
+
+-- defining... a function...
+add : Expr -> Expr -> Expr
+add = Add
+
+-----------------------------------------------------
+--- OK here we have a weird function....
+-- definining a function... that we might be able to make statements about...
+myfunc: Expr -> Expr
+myfunc arg = (Number 0x01) `add` arg 
+
+myfunc2: Expr -> Expr -> Expr
+myfunc2 a b = a `add` b 
+
+
+--- ok this think actually works... i think...
+
+-- this isn't very good...
+-- OK - now how do we generate code for myfunc?
+
 
 -- strategy for lambdas --- just expand the rhs - when we get to a variable binding 
 -- we just dup the stack...
@@ -196,20 +240,25 @@ expr =
 id:  Expr
 id = Lambda [ "x" ] (Variable "x")
 
-
+-- an expr node has a type... eg. number...
+-- but a lambda symbol doesn't....
+-- symbol 
 
 main : IO ()
 main = do
 
   putStrLn "hi"
 
-  let ops = compile expr
+  -- let ops = compile expr
+  let ops = compile $ myfunc Arg1 
   let hops = map human ops
   let mops = foldl (++) "" $ map machine ops
 
   printLn hops
   printLn mops
 
+-- myfunc arg = Apply (add (Number 0x01) (Variable "x") ) arg 
+-- myfunc arg = Apply (add (Number 0x01) arg ) 
 
 
 
