@@ -76,8 +76,10 @@ data Expr : Type where
   -- Lambda : String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
   Lambda : List String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
 
-  Apply : Expr -> Expr -> Expr        -- eg. (\x -> x) 123
+  -- Apply : Expr -> Expr -> Expr        -- eg. (\x -> x) 123
                                        -- we also need to have a symbol for replacement ...
+
+  Apply : Expr -> Expr        -- eg. (\x -> x) 123
 {-
   -- argument gets pushed on the stack.
     - but if/else will mean it may not be consumed...
@@ -183,8 +185,15 @@ compile expr = case expr of
 
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
-  -- BUT - how do we know to finish at the end of the function
+  -- BUT - how do we know to finish at the end of the function - easy just have a wrapper F
   Arg1 => [] 
+  Arg2 => [] 
+
+  Apply e => 
+      compile e
+      -- and then pop off any arguments...
+
+
 
 -- so we have a lambda expression. and we have an application... 
 -- (\x -> x + 1) 1. 
@@ -213,14 +222,22 @@ expr =
 add : Expr -> Expr -> Expr
 add = Add
 
+
+-- This can be a placeholder for a function...
+function : Expr -> Expr 
+function expr = Apply expr 
+
 -----------------------------------------------------
 --- OK here we have a weird function....
 -- definining a function... that we might be able to make statements about...
+
+-- add 1
 myfunc: Expr -> Expr
 myfunc arg = (Number 0x01) `add` arg 
 
+-- add two functions
 myfunc2: Expr -> Expr -> Expr
-myfunc2 a b = a `add` b 
+myfunc2 a b = function $ a `add` b 
 
 
 --- ok this think actually works... i think...
@@ -250,7 +267,7 @@ main = do
   putStrLn "hi"
 
   -- let ops = compile expr
-  let ops = compile $ myfunc Arg1 
+  let ops = compile $ myfunc2 Arg1 Arg2
   let hops = map human ops
   let mops = foldl (++) "" $ map machine ops
 
