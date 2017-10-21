@@ -152,18 +152,19 @@ gen x = case x of
         ll = toIntegerNat $ length l
         lr = toIntegerNat $ length r
     in
-      [ JUMPDEST ]
-      ++ r ++ [ JUMPDEST ]
-      ++ [ JUMP,  ADD, PC, VAL $ prim__truncBigInt_B8 lr, PUSH ] ++ l
-      ++ [ JUMPI, ADD, PC, VAL $ prim__truncBigInt_B8 ll, PUSH ] ++ c
+         -- [ JUMPDEST ] ++ r  ++ [ JUMP,  ADD, PC, VAL $ prim__truncBigInt_B8 (lr), PUSH ] 
+         -- [ JUMPDEST ] ++ r  ++ [ JUMP,  ADD, PC, VAL 0x2, PUSH ] 
+         [ JUMPDEST ] ++ r  ++ [ JUMP,  ADD, PC, VAL 0x5, PUSH ] 
+
+      ++ l ++ [ JUMPI, ADD, PC, VAL $ prim__truncBigInt_B8 (ll), PUSH ] ++ c
 
 
 --
 
 expr :  Expr
 expr =
-  Add (Add (Number 10) (Number 1)) (Number 1)
-  -- If (Number 1) (Number 0xff ) (Number 0xee)
+  -- Add (Add (Number 10) (Number 1)) (Number 1)
+  If (Number 0) (Number 0xff ) (Number 0xee)
 
 
 main : IO ()
