@@ -144,10 +144,10 @@ gen x = case x of
   Number val =>
     -- let v = prim__truncBigInt_B8 val in
     let v = fromInteger val in
-    [ VAL v, PUSH ]
+    [ PUSH, VAL v ]
 
   Add lhs rhs =>
-    ADD :: (gen rhs) ++ (gen lhs) --  are we doing this around the right way
+    (gen lhs) ++ (gen rhs) ++ [ ADD ] --  are we doing this around the right way
   
   -- relative jump labeling
   If cond lhs rhs =>
@@ -157,13 +157,21 @@ gen x = case x of
         ll = toIntegerNat $ length l
         lr = toIntegerNat $ length r
     in
+      c ++ [ ISZERO ]
+      ++ [ PUSH, VAL $ fromInteger (ll + 8), PC, ADD, JUMPI ] 
+      ++ l 
+      ++ [ PUSH, VAL $ fromInteger (lr + 4), PC, ADD, JUMP, JUMPDEST ] 
+      ++ r  
+      ++ [ JUMPDEST ] 
+
+{-
       [ JUMPDEST ] 
       ++ r  
       ++ [ JUMPDEST, JUMP,  ADD, PC, VAL $ fromInteger (lr + 4), PUSH ] 
       ++ l 
       ++ [ JUMPI, ADD, PC, VAL $ fromInteger (ll + 8), PUSH ] 
       ++ [ ISZERO ] ++ c
-
+-}
 
 
 -- reading this stuff backwards is hellish....
@@ -174,9 +182,9 @@ gen x = case x of
 expr :  Expr
 expr =
   -- Add (Add (Number 10) (Number 1)) (Number 1)
-  -- If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
+  If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
   -- If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
-  If (Number 1) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
+  -- If (Number 0) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
 
 
 main : IO ()
@@ -185,8 +193,8 @@ main = do
   putStrLn "hi"
 
   let ops = gen expr
-  let hops = reverse $ map human ops
-  let mops = foldl (++) "" $ reverse $ map machine ops
+  let hops = map human ops
+  let mops = foldl (++) "" $ map machine ops
 
   printLn hops
   printLn mops
