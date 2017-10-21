@@ -222,6 +222,10 @@ expr =
 add : Expr -> Expr -> Expr
 add = Add
 
+ifthenelse: Expr -> Expr -> Expr -> Expr
+ifthenelse = If
+
+
 
 -- This can be a placeholder for a function...
 function : Expr -> Expr 
@@ -240,8 +244,20 @@ myfunc2: Expr -> Expr -> Expr
 myfunc2 a b = function $ a `add` b 
 
 
---- ok this think actually works... i think...
+myfunc3: Expr -> Expr
+myfunc3 c = 
+  function $
+    ifthenelse c 
+      ((Number 0x01) `add` (Number 0x01))  
+      (Number 0x02)
+   
 
+
+-- ok - we use bind?
+
+
+
+--- ok this think actually works... i think...
 -- this isn't very good...
 -- OK - now how do we generate code for myfunc?
 
