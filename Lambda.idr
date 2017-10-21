@@ -148,7 +148,8 @@ gen x = case x of
 
   Add lhs rhs =>
     ADD :: (gen rhs) ++ (gen lhs) --  are we doing this around the right way
-                                    -- eg. lhs should be first,
+  
+  -- relative jump labeling
   If cond lhs rhs =>
     let c = gen cond
         l = gen lhs
@@ -163,6 +164,9 @@ gen x = case x of
       ++ [ JUMPI, ADD, PC, VAL $ fromInteger (ll + 8), PUSH ] 
       ++ [ ISZERO ] ++ c
 
+
+
+-- reading this stuff backwards is hellish....
 
 -- OK - so we can just reverse the order of the evaluation????
 -- so true?
@@ -181,7 +185,7 @@ main = do
   putStrLn "hi"
 
   let ops = gen expr
-  let hops = map human ops
+  let hops = reverse $ map human ops
   let mops = foldl (++) "" $ reverse $ map machine ops
 
   printLn hops
