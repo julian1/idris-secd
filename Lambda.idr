@@ -140,12 +140,14 @@ machine expr = case expr of
 compile : Expr -> List OpCode
 compile expr = case expr of
   Number val =>
-    -- let v = prim__truncBigInt_B8 val in
     let v = fromInteger val in
     [ PUSH, VAL v ]
 
+  -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
   Add lhs rhs =>
-    (compile lhs) ++ (compile rhs) ++ [ ADD ] --  are we doing this around the right way
+    compile lhs
+    ++ compile rhs
+    ++ [ ADD ] --  are we doing this around the right way
   
   -- relative jump labeling
   -- none of this list concat is efficient. probably should use join/flatten 
@@ -164,7 +166,7 @@ compile expr = case expr of
       ++ r  
       ++ [ JUMPDEST ] 
 
-
+-- so 
 
 expr :  Expr
 expr =
@@ -266,3 +268,4 @@ compile x = case x of
   -- use a different function ... or just return as a tuple?
   -- if we always push the lhs first... then we might be able to compileerate the label as we go...
 
+    -- let v = prim__truncBigInt_B8 val in
