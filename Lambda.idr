@@ -61,7 +61,8 @@ data Expr : Type where
 
   Variable : String -> Expr           -- a (bound) variable in a lambda term.
 
-  Lambda : String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
+  -- Lambda : String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
+  Lambda : List String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
 
   Apply : Expr -> Expr -> Expr        -- eg. (\x -> x) 123
                                        -- we also need to have a symbol for replacement ...
@@ -166,7 +167,14 @@ compile expr = case expr of
       ++ r  
       ++ [ JUMPDEST ] 
 
--- so 
+
+-- so we have a lambda expression. and we have an application... 
+-- (\x -> x + 1) 1. 
+-- the lambda expression can be alpha normalized... which is a transform...
+-- but remember free lambda terms need resolution and lifting..
+
+-- we don't even need to articulate the arguments - which are more like symbol lookup
+-- just need the ordering.
 
 expr :  Expr
 expr =
@@ -186,7 +194,7 @@ expr =
 -- Ahhh. actually it would be nice to deal with free variables
 
 id:  Expr
-id = Lambda "x" (Variable "x")
+id = Lambda [ "x" ] (Variable "x")
 
 
 
