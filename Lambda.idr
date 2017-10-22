@@ -231,8 +231,8 @@ expr =
 add : Expr -> Expr -> Expr
 add = Add
 
-ifthenelse: Expr -> Expr -> Expr -> Expr
-ifthenelse = If
+ifelse: Expr -> Expr -> Expr -> Expr
+ifelse = If
 
 
 
@@ -261,7 +261,7 @@ myfunc2 a b = function $ a `add` b
 myfunc3: Expr -> Expr
 myfunc3 c = 
   function $
-    ifthenelse c 
+    ifelse c 
       ((Number 1) `add` (Number 1))  
       (Number 122)
 
