@@ -83,6 +83,10 @@ data Expr : Type where
 
 -}
   Apply : Expr -> Expr        -- eg. (\x -> x) 123
+  -- Apply2, Apply3 etc...
+
+
+
 {-
   -- argument gets pushed on the stack.
     - but if/else will mean it may not be consumed...
@@ -236,6 +240,8 @@ ifthenelse = If
 -- may want to specify function2 and function1 and function0, that way 
 -- we know how to clean up the stack... 
 -- also to compile - we have test args...
+
+-- actually args might be better expressed explicitly...
 function : Expr -> Expr 
 function expr = Apply expr 
 
@@ -258,7 +264,13 @@ myfunc3 c =
     ifthenelse c 
       ((Number 1) `add` (Number 1))  
       (Number 122)
-   
+
+
+
+-- so we have the generalized Expr... But what about the type of that expression...
+-- Expr Integer 
+
+-- actually
 -- note that when we have a full tree - then we can do stuff... - like force eva
 
 
