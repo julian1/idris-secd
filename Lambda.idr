@@ -274,7 +274,7 @@ expr =
 -- Think we need to be explicit with the args....
 -- we ought to be able to simplify stuff.
 function : String -> Expr -> Expr 
-function s expr = Apply expr 
+function s expr = Apply expr
 
 -- the apply is not doing anything....
 
@@ -297,9 +297,26 @@ function s expr = Apply expr
 -- (lambda \x -> x + 1)
 -- or else we lambdaize it...
 
+-- http://docs.idris-lang.org/en/latest/tutorial/syntax.html
 syntax "if" [test] "then" [t] "else" [e] = If test t e;
 
+-- no different to just a function called lambda ... 
+-- but we might be able to use it more effectively...
+syntax "lambda" [arg] [exp] = Apply exp;
 
+syntax "var" [name] = Variable name;
+
+-- OK we can use {x} for bound variable names...
+-- syntax define {fname} {arg} ":=" [exp] = Apply exp 
+
+syntax "lambda"  {arg} ":=" [exp] = Apply exp 
+
+-- can this work...
+myfunc4: Expr
+myfunc4 = lambda x := 1 
+
+
+-- define f x := x + 1
 
 -- add 1
 myfunc: Expr -> Expr
