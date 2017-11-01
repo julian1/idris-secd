@@ -82,10 +82,9 @@ data Expr : Type where
   Number : Integer -> Expr        -- eg. pushing on stack is one gas.
 
   -- to remove ... this should be an environment
-  Add : Expr  -> Expr  -> Expr
+  Add : Expr -> Expr  -> Expr
 
-  If : Expr  -> Expr  -> Expr -> Expr
-
+  If : Expr -> Expr  -> Expr -> Expr
 
   -- lambda args - placeholders
   -- change to Integer for the placehodl
@@ -93,15 +92,15 @@ data Expr : Type where
   Arg1 : Expr
   Arg2 : Expr
 
-  Apply : Expr -> Expr        -- eg. (\x -> x) 123
-  -- Apply2, Apply3 etc...
+  Apply : Expr -> Expr        
+    -- eg. (\x -> x) 123
+    -- Apply2, Apply3 etc...
 
 
 
 Num Expr where
     (+) = Add 
     (*) = Add 
-
     fromInteger n = Number n 
 
 
@@ -155,12 +154,12 @@ data OpCode : Type where
 
 human : OpCode -> String
 human expr = case expr of
-  ADD => "add"
-  ISZERO => "not"
-  PUSH => "push"
-  JUMP => "jump"
-  JUMPI => "jumpi"
-  PC => "pc"
+  ADD     => "add"
+  ISZERO  => "not"
+  PUSH    => "push"
+  JUMP    => "jump"
+  JUMPI   => "jumpi"
+  PC      => "pc"
   JUMPDEST => "jumpdest"
   VAL bits8 => "0x" ++ b8ToHexString bits8
 
@@ -169,12 +168,12 @@ human expr = case expr of
 
 machine : OpCode -> String
 machine expr = case expr of
-  ADD => "01"
-  ISZERO => "15"
-  PUSH => "60"
-  JUMP => "56"
-  JUMPI => "57"
-  PC => "58"
+  ADD     => "01"
+  ISZERO  => "15"
+  PUSH    => "60"
+  JUMP    => "56"
+  JUMPI   => "57"
+  PC      => "58"
   JUMPDEST => "5b"
   VAL bits8 => b8ToHexString bits8
 
@@ -229,6 +228,9 @@ compile expr = case expr of
       compile e
       -- and then pop off any arguments...
 
+ifelse: Expr -> Expr -> Expr -> Expr
+ifelse = If
+
 
 
 -- so we have a lambda expression. and we have an application... 
@@ -239,15 +241,14 @@ compile expr = case expr of
 -- we don't even need to articulate the arguments - which are more like symbol lookup
 -- just need the ordering.
 
-expr :  Expr
+expr : Expr
 expr =
   -- Add (Add (Number 10) (Number 1)) (Number 1)
   -- If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
   -- If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
   -- If (Number 0) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
-
   -- If 0  (Add 0x01 0x01)  (Add (Number 0x02) (Number 0x02))
-  If 0  ( 2 + 5) (2 + 2 )
+  ifelse 0 (1 + 5) (2 + 2)
 
 
 -- A lambda or function
@@ -258,11 +259,8 @@ expr =
 -- eg. a function that takes the lambda...
 
 -- defining... a function...
-add : Expr -> Expr -> Expr
-add = Add
-
-ifelse: Expr -> Expr -> Expr -> Expr
-ifelse = If
+-- add : Expr -> Expr -> Expr
+-- add = Add
 
 
 -- This can be a placeholder for a function...
@@ -272,12 +270,36 @@ ifelse = If
 
 -- actually args might be better expressed explicitly...
 -- Or use a tuple destructor...
-function : Expr -> Expr 
-function expr = Apply expr 
+
+-- Think we need to be explicit with the args....
+-- we ought to be able to simplify stuff.
+function : String -> Expr -> Expr 
+function s expr = Apply expr 
+
+-- the apply is not doing anything....
+
+-- if we want real functions - then we're going to have to express them with a name or a jump point...
+-- like ifelse... we will need to inject labels however we do it...
+
+-- there is a function definition ...
+-- and application
+
 
 -----------------------------------------------------
 --- OK here we have a weird function....
 -- definining a function... that we might be able to make statements about...
+
+-- function 
+-- label/name args code 
+-- It would be really nice if we could use an expression without a type constructor...
+-- I think that we really 
+
+-- (lambda \x -> x + 1)
+-- or else we lambdaize it...
+
+syntax "if" [test] "then" [t] "else" [e] = If test t e;
+
+
 
 -- add 1
 myfunc: Expr -> Expr
@@ -286,17 +308,13 @@ myfunc arg = 1 + arg
 
 -- add two functions
 myfunc2: Expr -> Expr -> Expr
-myfunc2 a b = function $ a + b 
+myfunc2 a b = function "myfunc2" $ a + b 
 
-
-
--- It would be really nice if we could use an expression without a type constructor...
--- I think that we really 
 
 myfunc3: Expr -> Expr
 myfunc3 c = 
-  function $
-    ifelse c (1 + 2) 123 
+  function "myfunc3" $
+    if c then (1 + 2) else 123 
 
 
 
