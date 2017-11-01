@@ -54,7 +54,7 @@
 
 -- partial embedding
 -- issues lambda lifting. want monads,
-
+{-
 data MyInteger =
   Z | 
   S Nat 
@@ -73,12 +73,7 @@ fromIntegerNat n =
   else
     Z  
 
-Num MyInteger where
-    (+) = myadd 
-    (*) = myadd 
-
-    fromInteger = fromIntegerNat
-
+-}
 
 -- hmmm, if we want a 
 
@@ -100,6 +95,16 @@ data Expr : Type where
 
   Apply : Expr -> Expr        -- eg. (\x -> x) 123
   -- Apply2, Apply3 etc...
+
+
+
+Num Expr where
+    (+) = Add 
+    (*) = Add 
+
+    fromInteger n = Number n 
+
+
 
 
 
@@ -237,9 +242,11 @@ compile expr = case expr of
 expr :  Expr
 expr =
   -- Add (Add (Number 10) (Number 1)) (Number 1)
-  If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
+  -- If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
   -- If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
   -- If (Number 0) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
+
+  If 0  (Add 0x01 0x01)  (Add (Number 0x02) (Number 0x02))
 
 
 -- A lambda or function
@@ -286,7 +293,7 @@ myfunc3: Expr -> Expr
 myfunc3 c = 
   function $
     ifelse c 
-      ((Number 1) `add` (Number 1))  
+      (1 `add` 1)  
       (Number 122)
 
 
