@@ -55,6 +55,32 @@
 -- partial embedding
 -- issues lambda lifting. want monads,
 
+data MyInteger =
+  Z | 
+  S Nat 
+
+-- data MyInteger :  where
+
+myadd : MyInteger -> MyInteger -> MyInteger 
+
+
+||| Convert an Integer to a Nat, mapping negative numbers to 0
+fromIntegerNat : Integer -> MyInteger 
+fromIntegerNat 0 = Z 
+fromIntegerNat n = 
+  if (n > 0) then
+    S (fromIntegerNat (assert_smaller n (n - 1)))
+  else
+    Z  
+
+Num MyInteger where
+    (+) = myadd 
+    (*) = myadd 
+
+    fromInteger = fromIntegerNat
+
+
+-- hmmm, if we want a 
 
 data Expr : Type where
 
@@ -72,16 +98,6 @@ data Expr : Type where
   Arg1 : Expr
   Arg2 : Expr
 
-{-
-  Variable : String -> Expr           -- a (bound) variable in a lambda term.
-
-  -- Lambda : String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
-  Lambda : List String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
-
-  -- Apply : Expr -> Expr -> Expr        -- eg. (\x -> x) 123
-                                       -- we also need to have a symbol for replacement ...
-
--}
   Apply : Expr -> Expr        -- eg. (\x -> x) 123
   -- Apply2, Apply3 etc...
 
@@ -159,6 +175,12 @@ machine expr = case expr of
 
 
 
+-- we need bound lambda vars. also free vars
+-- perhaps free vars would be done better monadically?
+
+-- do
+-- Var x <- 123
+
 
 compile : Expr -> List OpCode
 compile expr = case expr of
@@ -235,7 +257,6 @@ ifelse: Expr -> Expr -> Expr -> Expr
 ifelse = If
 
 
-
 -- This can be a placeholder for a function...
 -- may want to specify function2 and function1 and function0, that way 
 -- we know how to clean up the stack... 
@@ -257,6 +278,9 @@ myfunc arg = (Number 0x01) `add` arg
 myfunc2: Expr -> Expr -> Expr
 myfunc2 a b = function $ a `add` b 
 
+
+
+-- It would be really nice if we could use an expression without a type constructor...
 
 myfunc3: Expr -> Expr
 myfunc3 c = 
@@ -315,6 +339,16 @@ main = do
 -- myfunc arg = Apply (add (Number 0x01) (Variable "x") ) arg 
 -- myfunc arg = Apply (add (Number 0x01) arg ) 
 
+{-
+  Variable : String -> Expr           -- a (bound) variable in a lambda term.
+
+  -- Lambda : String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
+  Lambda : List String -> Expr -> Expr     -- we don't know the stack depth. until we're evaluating the thing...
+
+  -- Apply : Expr -> Expr -> Expr        -- eg. (\x -> x) 123
+                                       -- we also need to have a symbol for replacement ...
+
+-}
 
 
 {-
