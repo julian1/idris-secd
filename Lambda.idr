@@ -246,7 +246,8 @@ expr =
   -- If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
   -- If (Number 0) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
 
-  If 0  (Add 0x01 0x01)  (Add (Number 0x02) (Number 0x02))
+  -- If 0  (Add 0x01 0x01)  (Add (Number 0x02) (Number 0x02))
+  If 0  ( 2 + 5) (2 + 2 )
 
 
 -- A lambda or function
@@ -270,6 +271,7 @@ ifelse = If
 -- also to compile - we have test args...
 
 -- actually args might be better expressed explicitly...
+-- Or use a tuple destructor...
 function : Expr -> Expr 
 function expr = Apply expr 
 
@@ -279,22 +281,22 @@ function expr = Apply expr
 
 -- add 1
 myfunc: Expr -> Expr
-myfunc arg = (Number 0x01) `add` arg 
+-- myfunc arg = (Number 0x01) `add` arg 
+myfunc arg = 1 + arg 
 
 -- add two functions
 myfunc2: Expr -> Expr -> Expr
-myfunc2 a b = function $ a `add` b 
+myfunc2 a b = function $ a + b 
 
 
 
 -- It would be really nice if we could use an expression without a type constructor...
+-- I think that we really 
 
 myfunc3: Expr -> Expr
 myfunc3 c = 
   function $
-    ifelse c 
-      (1 `add` 1)  
-      (Number 122)
+    ifelse c (1 + 2) 123 
 
 
 
