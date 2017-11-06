@@ -97,6 +97,8 @@ data Expr : Type where
     -- Apply2, Apply3 etc...
 
 
+-- > the Expr 0x12
+-- Number 18 : Expr
 
 Num Expr where
     (+) = Add 
@@ -142,12 +144,12 @@ Num Expr where
 -- opcode : Type
 
 data OpCode : Type where
-  ADD : OpCode
-  ISZERO : OpCode
-  PUSH : OpCode
-  JUMP : OpCode
-  JUMPI : OpCode
-  PC : OpCode
+  ADD     : OpCode
+  ISZERO  : OpCode
+  PUSH    : OpCode
+  JUMP    : OpCode
+  JUMPI   : OpCode
+  PC      : OpCode
   JUMPDEST : OpCode
   VAL : Bits8 -> OpCode
 
@@ -297,6 +299,9 @@ function s expr = Apply expr
 -- (lambda \x -> x + 1)
 -- or else we lambdaize it...
 
+
+-- OK there is support with dsl support... - including with lambdas.
+
 -- http://docs.idris-lang.org/en/latest/tutorial/syntax.html
 syntax "if" [test] "then" [t] "else" [e] = If test t e;
 
@@ -312,6 +317,7 @@ syntax "var" [name] = Variable name;
 syntax "lambda"  {arg} ":=" [exp] = Apply exp 
 
 -- can this work...
+-- I don't think we can bind the variable in any way ... 
 myfunc4: Expr
 myfunc4 = lambda x := 1 
 
