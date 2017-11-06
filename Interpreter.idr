@@ -54,7 +54,6 @@ using (G:Vect n Ty)
       Pop  : HasType k G t -> HasType (FS k) (u :: G) t
 
 
-
   data Expr : Vect n Ty -> Ty -> Type where
 
       Var : HasType i G t -> Expr G t
@@ -62,19 +61,15 @@ using (G:Vect n Ty)
       Val : (x : Integer) -> Expr G TyInt
 
       Lam : Expr (a :: G) t -> Expr G (TyFun a t)
+
       App : Expr G (TyFun a t) -> Expr G a -> Expr G t
+
       Op  : (interpTy a -> interpTy b -> interpTy c) ->
             Expr G a -> Expr G b -> Expr G c
+
       If  : Expr G TyBool ->
             Lazy (Expr G a) ->
             Lazy (Expr G a) -> Expr G a
-
-
--- why is this even type checking...
--- stuggling with using statement.
--- OK this works - but not in the interpreter 
--- what is the type of x
--- let y = Var
 
   -- Am not sure this ever actually will get created - instead it's just a vec of the types
   -- but it might be useful.
@@ -85,26 +80,43 @@ using (G:Vect n Ty)
   x : Expr G TyInt 
   x = Val 123 
 
-  -- b : Expr G TyBool
-  --b = Val False 
 
+  -- So this is really a full typed lambda expression...
+  -- we may even be able to use variables for functions...
+  -- but what about modelling gas etc...
 
   -- binary add expression...
   add : Expr G (TyFun TyInt (TyFun TyInt TyInt))
   add = Lam (Lam (Op (+) (Var Stop) (Var (Pop Stop))))
 
+
+  inc' : Expr G (TyFun TyInt TyInt)
+  inc' = Lam (Op (+) (Var Stop) (Val 123 ))
+
+  -- So we have 
+
   -- OK - it somehow knows the number of args ....
+  -- OK - it's the Lam expression that manipulates the args in G
 
-  add' : Expr G (TyFun TyInt TyInt)
-  add' = Lam (Op (+) (Var Stop) (Val 123 ))
+  -- So we should be able to do an apply. and have expressions... 
 
-  -- but how to construct a Var ... 
-  -- y : Expr G t
-  -- y = Var (Pop Stop)
-
+  identity : Expr G (TyFun TyInt TyInt)
+  identity = Lam (Var Stop) 
 
 
-main : IO ()
-main =
-  printLn "hi"
+  -- App : Expr G (TyFun a t) -> Expr G a -> Expr G t
+  -- applying a value to identity
+  apply : Expr G TyInt
+  apply = App identity  (Val 123)  
+
+  apply2 : Expr G TyInt
+  apply2 = App (App add (Val 123))  (Val 123)  
+
+
+  -- OK how do we bring this stuff into scope.
+
+
+  main : IO ()
+  main =
+    printLn "hi"
 
