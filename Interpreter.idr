@@ -76,18 +76,35 @@ using (G:Vect n Ty)
 -- what is the type of x
 -- let y = Var
 
+  -- Am not sure this ever actually will get created - instead it's just a vec of the types
+  -- but it might be useful.
   context: Vect 2 Ty
   context = [ TyInt, TyInt]
 
-
-  -- how do I construct
+  -- val is easy
   x : Expr G TyInt 
   x = Val 123 
+
+  -- b : Expr G TyBool
+  --b = Val False 
+
+
+  -- binary add expression...
+  add : Expr G (TyFun TyInt (TyFun TyInt TyInt))
+  add = Lam (Lam (Op (+) (Var Stop) (Var (Pop Stop))))
+
+  -- OK - it somehow knows the number of args ....
+
+  add' : Expr G (TyFun TyInt TyInt)
+  add' = Lam (Op (+) (Var Stop) (Val 123 ))
+
+  -- but how to construct a Var ... 
+  -- y : Expr G t
+  -- y = Var (Pop Stop)
+
 
 
 main : IO ()
 main =
   printLn "hi"
-
--- ok we're using using - 
 
