@@ -39,11 +39,15 @@ no - we have to try and construct via one of the constructors...
 -- remember - all the typing with the context is happening at compile time.
 -- G is context which is a Vect
 -- using, is specifying G as type
+
+-- G : Type
+-- G = Vect n Ty
+
 using (G:Vect n Ty)
 
   -- it's a vector of Types - eg. Vect n Ty
   -- expression - indexed by context (local variables) and the type of the expression itself, 
-  data Expr : Vect n Ty -> Ty -> Type
+  -- data Expr : Vect n Ty -> Ty -> Type
 
   --- hmmmn it's using Fin for laziness?
   --- the only thing using HasType is Var. So it's to manipulate the variable context
