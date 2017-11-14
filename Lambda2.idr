@@ -293,12 +293,17 @@ main' = do
 
 -- Ahhhh will might struggle to push a large integer? 
 
+-- OK. manipulating this thing as a string of bytes is going to be royal pain... 
+
 main : IO ()
 main = do
 
   -- address value is truncated....
 
-  let ops = compile $ call 0xffff 0x0 0x0 0x0 0x0 0x0 0x0 
+  -- to call simple code or method, we just need to do a send transaction with data.
+
+  --call(g, a, v, in, insize, out, outsize)    
+  let ops = compile $ call 30000 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
   let len = fromInteger .toIntegerNat .length $ ops 
 
   printLn len
