@@ -29,15 +29,19 @@ Num Expr where
 data OpCode : Type where
   ADD     : OpCode
   ISZERO  : OpCode
+
   PUSH    : OpCode
+  POP     : OpCode
   DUP1    : OpCode
+
   JUMP    : OpCode
   JUMPI   : OpCode
   PC      : OpCode
   JUMPDEST : OpCode
-  CODECOPY : OpCode
   RETURN  : OpCode
   STOP    : OpCode    -- halts execution
+
+  CODECOPY : OpCode
   VAL : Bits8 -> OpCode
 
 
@@ -45,21 +49,25 @@ human : OpCode -> String
 human expr = case expr of
   ADD     => "add"
   ISZERO  => "not"
+
   PUSH    => "push"
+  POP     => "pop"
   DUP1    => "dup1" 
+
   JUMP    => "jump"
   JUMPI   => "jumpi"
   PC      => "pc"
   JUMPDEST => "jumpdest"
-  CODECOPY => "codecopy"
   RETURN  => "return"
   STOP   => "stop"
+
+  CODECOPY => "codecopy"
   VAL bits8 => "0x" ++ b8ToHexString bits8
 
 
 -- https://ethereum.stackexchange.com/questions/119/what-opcodes-are-available-for-the-ethereum-evm
 
---- TODO HUGHHH why is tris a string rather than a hex value...
+--- TODO HUGHHH why is this a string rather than a hex value...
 
 machine : OpCode -> String
 machine expr = case expr of
@@ -67,14 +75,17 @@ machine expr = case expr of
   ISZERO  => "15"
 
   PUSH    => "60"
+  POP     => "50"
   DUP1    => "80" 
+
   JUMP    => "56"
   JUMPI   => "57"
   PC      => "58"
   JUMPDEST => "5b"
-  CODECOPY => "39"
   RETURN  => "f3"
   STOP    => "00"
+
+  CODECOPY => "39"
   VAL bits8 => b8ToHexString bits8
 
 
@@ -180,7 +191,10 @@ myfunc3 c =
       then (1 + 456) 
       else 123 
 
-
+{-
+With the exception of PUSH, none of the opcodes have an argument
+The argument of PUSH is also separated by white space
+-}
 
 -- ok, we want some loader code...
 -- issue is that to call this. we're going to have to use a keccak i
@@ -192,11 +206,6 @@ main = do
 
   -- let ops = compile $ myfunc3 Arg1 
   let ops = compile $ myfunc0
-  let hops = map human ops
-  let mops = foldl (++) "" $ map machine ops
-
-  printLn hops
-  printLn mops
 
   -- PUSH1 16 DUP PUSH1 12 PUSH1 0 CODECOPY PUSH1 0 RETURN STOP
   
@@ -204,10 +213,38 @@ main = do
   -- because a push *has* to have a literal after it.... 
   -- And not sure any other value is like that...
 
-  let len2 = fromInteger $ toIntegerNat $ length hops 
+  ------------------------
+  -- OK 
+  -- test 1 - try to get contract into call space. then call it at address after its deployed and get result
+  -- test 2 - pass an argument and h
 
-  let init = the (List OpCode) [ PUSH, VAL len2, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
+  let len = fromInteger .toIntegerNat .length $ ops 
+
+  printLn len
+
+  -- let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
+  -- let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, POP, PUSH, VAL 0, RETURN, STOP ] ;
+  let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
+
+{-
+  When a contract creating transaction makes its way into the blockchain, the
+  data bytearray in the transaction is interpreted as EVM code, and the value
+  returned by that EVM execution is taken to be the code of the new contract
+
+  RETURN, returning memory bytes 0-16,   eg. returns a range. 
+-}
+
+  -- so I think the idea is we return the address ie. 0. and the size. ie straight from codecopy
+  -- but it doesn't work.
+
+  let all = loader ++ ops
 
 
-  printLn $ length hops 
+  let hops = map human all
+  printLn hops
+
+  let mops = foldl (++) "" $ map machine all
+  printLn mops
+
+
 
