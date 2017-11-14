@@ -42,7 +42,7 @@ data OpCode : Type where
 
   PUSH1   : OpCode
   PUSH2   : OpCode
-  PUSH32  : OpCode 
+  PUSH32  : Integer -> OpCode 
 
   POP     : OpCode
   DUP1    : OpCode
@@ -58,6 +58,8 @@ data OpCode : Type where
 
   CODECOPY : OpCode
   CALL     : OpCode
+
+--  BALANCE   : OpCode
 
   VAL : Bits8 -> OpCode
 
@@ -255,6 +257,15 @@ The argument of PUSH1 is also separated by white space
 -- issue is that to call this. we're going to have to use a keccak i
 -- actually we ought to be able to load it into whatever address that we want.
 -- 0x100 
+
+{-
+  VERY IMPORTANT.
+  lets get codecopy as an intrinsic also.  same as call.
+
+  actually - if we can't calculate the code offset - we might as well leave it as a literal opcodes...
+    although would be a lot nicer when typed... 
+
+-}
 
 main' : IO ()
 main' = do
