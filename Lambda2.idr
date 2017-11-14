@@ -29,8 +29,8 @@ Num Expr where
 data OpCode : Type where
   ADD     : OpCode
   ISZERO  : OpCode
-  DUP1    : OpCode
   PUSH    : OpCode
+  DUP1    : OpCode
   JUMP    : OpCode
   JUMPI   : OpCode
   PC      : OpCode
@@ -45,8 +45,8 @@ human : OpCode -> String
 human expr = case expr of
   ADD     => "add"
   ISZERO  => "not"
-  DUP1    => "dup1" 
   PUSH    => "push"
+  DUP1    => "dup1" 
   JUMP    => "jump"
   JUMPI   => "jumpi"
   PC      => "pc"
@@ -66,8 +66,8 @@ machine expr = case expr of
   ADD     => "01"
   ISZERO  => "15"
 
-  DUP1    => "80" 
   PUSH    => "60"
+  DUP1    => "80" 
   JUMP    => "56"
   JUMPI   => "57"
   PC      => "58"
@@ -181,9 +181,6 @@ myfunc3 c =
       else 123 
 
 
-ops2 : List OpCode
-ops2 = [ PUSH, VAL 16, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ];
-
 
 -- ok, we want some loader code...
 -- issue is that to call this. we're going to have to use a keccak i
@@ -202,19 +199,16 @@ main = do
   printLn mops
 
   -- PUSH1 16 DUP PUSH1 12 PUSH1 0 CODECOPY PUSH1 0 RETURN STOP
-  -- lets ops = [ PUSH1 16, DUP, PUSH1 12, PUSH1 0, CODECOPY, PUSH1 0, RETURN, STOP ] 
---  ] ;--, 
+  
+  -- It may make sense to combine push and value pushed...
+  -- because a push *has* to have a literal after it.... 
+  -- And not sure any other value is like that...
 
-  -- let ops2 = [ PUSH ]  ;
-    -- where ops2 : List OpCode; 
+  let len = length hops
+--  let v = fromInteger val in
+--    [ PUSH, VAL v ]
 
-  let ops3 = the (List OpCode) ([ PUSH, VAL 16, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ]) ;
-
-{-
-  let
-    ops3 : List OpCode
-    ops3 = [ PUSH, VAL 16, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP 
--}
+  let init = the (List OpCode) [ PUSH, VAL $ fromInteger $ toIntegerNat len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
 
 
   printLn $ length hops 
