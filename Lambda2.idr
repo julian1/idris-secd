@@ -1,7 +1,6 @@
 
 -- same as lambda but without comments...
 
--- hmmm, if we want a 
 
 data Expr : Type where
 
@@ -30,11 +29,15 @@ Num Expr where
 data OpCode : Type where
   ADD     : OpCode
   ISZERO  : OpCode
+  DUP1    : OpCode
   PUSH    : OpCode
   JUMP    : OpCode
   JUMPI   : OpCode
   PC      : OpCode
   JUMPDEST : OpCode
+  CODECOPY : OpCode
+  RETURN  : OpCode
+  STOP    : OpCode    -- halts execution
   VAL : Bits8 -> OpCode
 
 
@@ -42,25 +45,36 @@ human : OpCode -> String
 human expr = case expr of
   ADD     => "add"
   ISZERO  => "not"
+  DUP1    => "dup1" 
   PUSH    => "push"
   JUMP    => "jump"
   JUMPI   => "jumpi"
   PC      => "pc"
   JUMPDEST => "jumpdest"
+  CODECOPY => "codecopy"
+  RETURN  => "return"
+  STOP   => "stop"
   VAL bits8 => "0x" ++ b8ToHexString bits8
 
 
 -- https://ethereum.stackexchange.com/questions/119/what-opcodes-are-available-for-the-ethereum-evm
 
+--- TODO HUGHHH why is tris a string rather than a hex value...
+
 machine : OpCode -> String
 machine expr = case expr of
   ADD     => "01"
   ISZERO  => "15"
+
+  DUP1    => "80" 
   PUSH    => "60"
   JUMP    => "56"
   JUMPI   => "57"
   PC      => "58"
   JUMPDEST => "5b"
+  CODECOPY => "39"
+  RETURN  => "f3"
+  STOP    => "00"
   VAL bits8 => b8ToHexString bits8
 
 
@@ -145,10 +159,14 @@ syntax "var" [name] = Variable name;
 -- syntax "lambda"  {arg} ":=" [exp] = Apply exp 
 
 
+
+myfunc0: Expr
+myfunc0 = 0xaa + 0xbb 
+
 -- add 1
-myfunc: Expr -> Expr
+myfunc1: Expr -> Expr
 -- myfunc arg = (Number 0x01) `add` arg 
-myfunc arg = 1 + arg 
+myfunc1 arg = 1 + arg 
 
 -- add two functions
 myfunc2: Expr -> Expr -> Expr
@@ -158,17 +176,46 @@ myfunc2 a b = function "myfunc2" $ a + b
 myfunc3: Expr -> Expr
 myfunc3 c = 
   function "myfunc3" $
-    if c then (1 + 2) else 123 
+    if c 
+      then (1 + 456) 
+      else 123 
 
+
+ops2 : List OpCode
+ops2 = [ PUSH, VAL 16, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ];
+
+
+-- ok, we want some loader code...
+-- issue is that to call this. we're going to have to use a keccak i
+-- actually we ought to be able to load it into whatever address that we want.
+-- 0x100 
 
 main : IO ()
 main = do
 
-  let ops = compile $ myfunc3 Arg1 
+  -- let ops = compile $ myfunc3 Arg1 
+  let ops = compile $ myfunc0
   let hops = map human ops
   let mops = foldl (++) "" $ map machine ops
 
   printLn hops
   printLn mops
 
+  -- PUSH1 16 DUP PUSH1 12 PUSH1 0 CODECOPY PUSH1 0 RETURN STOP
+  -- lets ops = [ PUSH1 16, DUP, PUSH1 12, PUSH1 0, CODECOPY, PUSH1 0, RETURN, STOP ] 
+--  ] ;--, 
+
+  -- let ops2 = [ PUSH ]  ;
+    -- where ops2 : List OpCode; 
+
+  let ops3 = the (List OpCode) ([ PUSH, VAL 16, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ]) ;
+
+{-
+  let
+    ops3 : List OpCode
+    ops3 = [ PUSH, VAL 16, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP 
+-}
+
+
+  printLn $ length hops 
 
