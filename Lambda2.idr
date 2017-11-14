@@ -30,12 +30,20 @@ Num Expr where
     (*) = Add 
     fromInteger n = Number n 
 
+{-
+0x60    PUSH1   Place 1 byte item on stack
+0x61    PUSH2   Place 2-byte item on stack
+0x7f    PUSH32
+-}
 
 data OpCode : Type where
   ADD     : OpCode
   ISZERO  : OpCode
 
-  PUSH    : OpCode
+  PUSH1   : OpCode
+  PUSH2   : OpCode
+  PUSH32  : OpCode 
+
   POP     : OpCode
   DUP1    : OpCode
 
@@ -59,7 +67,10 @@ human expr = case expr of
   ADD     => "add"
   ISZERO  => "not"
 
-  PUSH    => "push"
+  PUSH1    => "push1"
+  PUSH2    => "push2"
+  PUSH32   => "push32"
+
   POP     => "pop"
   DUP1    => "dup1" 
 
@@ -88,7 +99,10 @@ machine expr = case expr of
   ADD     => "01"
   ISZERO  => "15"
 
-  PUSH    => "60"
+  PUSH1   => "60"
+  PUSH2   => "61"
+  PUSH32  => "7f"
+
   POP     => "50"
   DUP1    => "80" 
 
@@ -112,7 +126,7 @@ compile : Expr -> List OpCode
 compile expr = case expr of
   Number val =>
     let v = fromInteger val in
-    [ PUSH, VAL v ]
+    [ PUSH1, VAL v ]
 
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
   Add lhs rhs =>
@@ -130,9 +144,9 @@ compile expr = case expr of
         lr = toIntegerNat $ length r
     in
       c ++ [ ISZERO ]
-      ++ [ PUSH, VAL $ fromInteger (ll + 8), PC, ADD, JUMPI ] 
+      ++ [ PUSH1, VAL $ fromInteger (ll + 8), PC, ADD, JUMPI ] 
       ++ l  
-      ++ [ PUSH, VAL $ fromInteger (lr + 4), PC, ADD, JUMP ] 
+      ++ [ PUSH1, VAL $ fromInteger (lr + 4), PC, ADD, JUMP ] 
       ++ [ JUMPDEST ] 
       ++ r  
       ++ [ JUMPDEST ] 
@@ -233,8 +247,8 @@ myfunc4 = call 0x0 0x0 0x0 0x0 0x0 0x0 0x0
 --mycall : Expr -> Expr
 
 {-
-With the exception of PUSH, none of the opcodes have an argument
-The argument of PUSH is also separated by white space
+With the exception of PUSH1, none of the opcodes have an argument
+The argument of PUSH1 is also separated by white space
 -}
 
 -- ok, we want some loader code...
@@ -254,7 +268,7 @@ main' = do
 
   -- this works without var setup.
   let loader' = the (List OpCode) [ 
-        PUSH, VAL len, DUP1, PUSH, VAL 0x0B, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN 
+        PUSH1, VAL len, DUP1, PUSH1, VAL 0x0B, PUSH1, VAL 0, CODECOPY, PUSH1, VAL 0, RETURN 
         ];
 
   -- hmmm return looks like it returns immediately
@@ -262,9 +276,9 @@ main' = do
 
   -- this works - as solidity like setup.
   let loader = the (List OpCode) [ 
-        PUSH, VAL 0x60, PUSH, VAL 0x40, MSTORE, 
-        PUSH, VAL len, DUP1, PUSH, VAL (0x10 + 0), PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN  --,
-        -- PUSH, VAL 0x00, PUSH, VAL 0xff
+        PUSH1, VAL 0x60, PUSH1, VAL 0x40, MSTORE, 
+        PUSH1, VAL len, DUP1, PUSH1, VAL (0x10 + 0), PUSH1, VAL 0, CODECOPY, PUSH1, VAL 0, RETURN  --,
+        -- PUSH1, VAL 0x00, PUSH1, VAL 0xff
         ];
 
   let all = loader ++ ops
