@@ -10,6 +10,11 @@ data Expr : Type where
 
   If : Expr -> Expr  -> Expr -> Expr
 
+
+  --call(g, a, v, in, insize, out, outsize)    
+  -- not a pure expression
+  Call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
+
   -- lambda args - placeholders -- change to Integer for the placehodl
   Arg1 : Expr
   Arg2 : Expr
@@ -44,6 +49,8 @@ data OpCode : Type where
   STOP    : OpCode    -- halts execution
 
   CODECOPY : OpCode
+  CALL     : OpCode
+
   VAL : Bits8 -> OpCode
 
 
@@ -63,9 +70,11 @@ human expr = case expr of
   PC      => "pc"
   JUMPDEST => "jumpdest"
   RETURN  => "return"
-  STOP   => "stop"
+  STOP    => "stop"
 
   CODECOPY => "codecopy"
+  CALL    => "call"
+
   VAL bits8 => "0x" ++ b8ToHexString bits8
 
 
@@ -93,6 +102,8 @@ machine expr = case expr of
   STOP    => "00"
 
   CODECOPY => "39"
+  CALL    => "f1"
+
   VAL bits8 => b8ToHexString bits8
 
 
@@ -127,6 +138,20 @@ compile expr = case expr of
       ++ [ JUMPDEST ] 
 
 
+  -- stateful probably doesn't want to be modelled as expression syntax
+  -- call(g, a, v, in, insize, out, outsize)    
+  Call g a v in_ insize out outsize => 
+    let g' = compile g
+        a' = compile a
+        v' = compile v
+        in_' = compile in_
+        insize' = compile insize
+        out' = compile out
+        outsize' = compile outsize
+    in
+    g' ++ a' ++ v' ++ in_' ++ insize' ++ out' ++ outsize' ++ [ CALL ]
+
+
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
   -- BUT - how do we know to finish at the end of the function - easy just have a wrapper F
@@ -143,6 +168,8 @@ ifelse: Expr -> Expr -> Expr -> Expr
 ifelse = If
 
 
+call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
+call = Call
 
 expr : Expr
 expr =
@@ -198,6 +225,13 @@ myfunc3 c =
       then (1 + 456) 
       else 123 
 
+
+myfunc4: Expr
+myfunc4 = call 0x0 0x0 0x0 0x0 0x0 0x0 0x0 
+
+
+--mycall : Expr -> Expr
+
 {-
 With the exception of PUSH, none of the opcodes have an argument
 The argument of PUSH is also separated by white space
@@ -208,11 +242,65 @@ The argument of PUSH is also separated by white space
 -- actually we ought to be able to load it into whatever address that we want.
 -- 0x100 
 
-main : IO ()
-main = do
+main' : IO ()
+main' = do
 
   -- let ops = compile $ myfunc3 Arg1 
   let ops = compile $ myfunc0
+
+  let len = fromInteger .toIntegerNat .length $ ops 
+
+  printLn len
+
+  -- this works without var setup.
+  let loader' = the (List OpCode) [ 
+        PUSH, VAL len, DUP1, PUSH, VAL 0x0B, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN 
+        ];
+
+  -- hmmm return looks like it returns immediately
+  -- OR maybe --------   we just do lots of codecopy but don't return
+
+  -- this works - as solidity like setup.
+  let loader = the (List OpCode) [ 
+        PUSH, VAL 0x60, PUSH, VAL 0x40, MSTORE, 
+        PUSH, VAL len, DUP1, PUSH, VAL (0x10 + 0), PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN  --,
+        -- PUSH, VAL 0x00, PUSH, VAL 0xff
+        ];
+
+  let all = loader ++ ops
+
+  let hops = map human all
+  printLn hops
+
+  let mops = foldl (++) "" $ map machine all
+  printLn mops
+
+
+
+-- Ahhhh will might struggle to push a large integer? 
+
+main : IO ()
+main = do
+
+  -- address value is truncated....
+
+  let ops = compile $ call 0xffff 0x0 0x0 0x0 0x0 0x0 0x0 
+  let len = fromInteger .toIntegerNat .length $ ops 
+
+  printLn len
+  
+  let all = ops -- loader ++ ops
+
+  let hops = map human all
+  printLn hops
+
+  let mops = foldl (++) "" $ map machine all
+  printLn mops
+
+
+
+
+
 
  ------------------------
   -- OK 
@@ -223,21 +311,62 @@ main = do
   -- then try to call the contract - 
   -- then try the full other example... with variables...
 
-  let len = fromInteger .toIntegerNat .length $ ops 
+  -- IMPORTANT - we should try to do this in hevm. deploy the contract, then jump into it.
 
-  printLn len
+  -- we have code to deploy. but we have to return before we can execute it...
 
-  -- this works without var setup.
-  let loader = the (List OpCode) [ 
-        PUSH, VAL len, DUP1, PUSH, VAL 0x0B, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN 
-        ];
 
-  -- this works - as solidity like setup.
-  let solidityLoader = the (List OpCode) [ 
-        PUSH, VAL 0x60, PUSH, VAL 0x40, MSTORE, 
-        PUSH, VAL len, DUP1, PUSH, VAL 0x10, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN 
-        ];
 
+{--
+call(g, a, v, in, insize, out, outsize)    
+  call contract at address a with input mem[in..(in+insize)) providing g gas 
+  and v wei and output area mem[out..(out+outsize)) returning 0 on error (eg. out 
+  of gas) and 1 on success
+
+  - (in,insize) (out,outsize)
+
+-}
+
+
+
+  -- so we can init/loader code in at an address using codecopy ... 
+  -- but how do we 
+  -- ahhh --- if it doesn't indicate stop maybe we get called back again?
+
+{-
+  we just need a raw transaction...
+  
+  web3.eth.sendTransaction({
+  from: sendingAccount,
+  to: contract.address,
+  data: yourData, // optional, if you want to pass data or specify another function to be called by delegateCall you do that here
+  gas: requiredGas, // technically optional, but you almost certainly need more than the default 21k gas
+  value: value //optional, if you want to pay the contract Ether
+
+
+  a simple assembler would be really nice as well... with () instead of application.
+
+<address>.balance (uint256):
+    balance of the Address in Wei
+<address>.transfer(uint256 amount):
+    send given amount of Wei to Address, throws on failure
+<address>.send(uint256 amount) returns (bool):
+    send given amount of Wei to Address, returns false on failure
+<address>.call(...) returns (bool):
+    issue low-level CALL, returns false on failure
+<address>.callcode(...) returns (bool):
+    issue low-level CALLCODE, returns false on failure
+<address>.delegatecall(...) returns (bool):
+    issue low-level DELEGATECALL, returns false on failure 
+
+});
+
+
+-}
+
+  -- OK we should be able to all it - just calling call(), callcode() or delegatecall() from ordinary code...
+  -- can we do this from web3 however...
+  -- HOW... did the guy call...
 
 {-
   When a contract creating transaction makes its way into the blockchain, the
@@ -246,18 +375,4 @@ main = do
 
   RETURN, returning memory bytes 0-16,   eg. returns a range. 
 -}
-
-  -- so I think the idea is we return the address ie. 0. and the size. ie straight from codecopy
-  -- but it doesn't work.
-
-  let all = loader ++ ops
-
-
-  let hops = map human all
-  printLn hops
-
-  let mops = foldl (++) "" $ map machine all
-  printLn mops
-
-
 
