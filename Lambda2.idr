@@ -204,11 +204,9 @@ main = do
   -- because a push *has* to have a literal after it.... 
   -- And not sure any other value is like that...
 
-  let len = length hops
---  let v = fromInteger val in
---    [ PUSH, VAL v ]
+  let len2 = fromInteger $ toIntegerNat $ length hops 
 
-  let init = the (List OpCode) [ PUSH, VAL $ fromInteger $ toIntegerNat len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
+  let init = the (List OpCode) [ PUSH, VAL len2, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
 
 
   printLn $ length hops 
