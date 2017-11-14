@@ -34,6 +34,8 @@ data OpCode : Type where
   POP     : OpCode
   DUP1    : OpCode
 
+  MSTORE  : OpCode 
+
   JUMP    : OpCode
   JUMPI   : OpCode
   PC      : OpCode
@@ -54,6 +56,8 @@ human expr = case expr of
   POP     => "pop"
   DUP1    => "dup1" 
 
+  MSTORE  => "mstore"
+
   JUMP    => "jump"
   JUMPI   => "jumpi"
   PC      => "pc"
@@ -68,6 +72,7 @@ human expr = case expr of
 -- https://ethereum.stackexchange.com/questions/119/what-opcodes-are-available-for-the-ethereum-evm
 
 --- TODO HUGHHH why is this a string rather than a hex value...
+-- actually really doesn't matter too much
 
 machine : OpCode -> String
 machine expr = case expr of
@@ -77,6 +82,8 @@ machine expr = case expr of
   PUSH    => "60"
   POP     => "50"
   DUP1    => "80" 
+
+  MSTORE  => "52"
 
   JUMP    => "56"
   JUMPI   => "57"
@@ -224,7 +231,22 @@ main = do
 
   -- let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
   -- let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, POP, PUSH, VAL 0, RETURN, STOP ] ;
-  let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
+  let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 11, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN ] ;
+
+  let loader = the (List OpCode) [ 
+        PUSH, VAL 0x60, PUSH, VAL 0x40, MSTORE, 
+        PUSH, VAL len, DUP1, PUSH, VAL 0x10, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN 
+        ] ;
+
+
+  -- lets keep the 12. then change to 11.
+  -- then try the full other example... with variables...
+
+  -- solidity output example. our stuff looks correct.
+    -- PUSH1 0x60 PUSH1 0x40 MSTORE 
+    -- PUSH1 0x6 DUP1 PUSH1 0x10 PUSH1 0x0 CODECOPY PUSH1 0x0 RETURN 
+    -- PUSH1 0x60 PUSH1 0x40 MSTORE STOP
+
 
 {-
   When a contract creating transaction makes its way into the blockchain, the
