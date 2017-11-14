@@ -214,38 +214,29 @@ main = do
   -- let ops = compile $ myfunc3 Arg1 
   let ops = compile $ myfunc0
 
-  -- PUSH1 16 DUP PUSH1 12 PUSH1 0 CODECOPY PUSH1 0 RETURN STOP
-  
-  -- It may make sense to combine push and value pushed...
-  -- because a push *has* to have a literal after it.... 
-  -- And not sure any other value is like that...
-
-  ------------------------
+ ------------------------
   -- OK 
-  -- test 1 - try to get contract into call space. then call it at address after its deployed and get result
+  -- test 1 - try to get contract into call space. 
+  -- test 2 - try to call it at address after its deployed and get result
   -- test 2 - pass an argument and h
+  -- lets keep the 12. then change to 11.
+  -- then try to call the contract - 
+  -- then try the full other example... with variables...
 
   let len = fromInteger .toIntegerNat .length $ ops 
 
   printLn len
 
-  -- let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN, STOP ] ;
-  -- let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 12, PUSH, VAL 0, CODECOPY, POP, PUSH, VAL 0, RETURN, STOP ] ;
-  let loader = the (List OpCode) [ PUSH, VAL len, DUP1, PUSH, VAL 11, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN ] ;
-
+  -- this works without var setup.
   let loader = the (List OpCode) [ 
+        PUSH, VAL len, DUP1, PUSH, VAL 0x0B, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN 
+        ];
+
+  -- this works - as solidity like setup.
+  let solidityLoader = the (List OpCode) [ 
         PUSH, VAL 0x60, PUSH, VAL 0x40, MSTORE, 
         PUSH, VAL len, DUP1, PUSH, VAL 0x10, PUSH, VAL 0, CODECOPY, PUSH, VAL 0, RETURN 
-        ] ;
-
-
-  -- lets keep the 12. then change to 11.
-  -- then try the full other example... with variables...
-
-  -- solidity output example. our stuff looks correct.
-    -- PUSH1 0x60 PUSH1 0x40 MSTORE 
-    -- PUSH1 0x6 DUP1 PUSH1 0x10 PUSH1 0x0 CODECOPY PUSH1 0x0 RETURN 
-    -- PUSH1 0x60 PUSH1 0x40 MSTORE STOP
+        ];
 
 
 {-
