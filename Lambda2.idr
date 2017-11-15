@@ -1,4 +1,8 @@
 
+-- https://github.com/idris-lang/Idris-dev/tree/master/libs/contrib/Data
+
+-- https://github.com/idris-lang/Idris-dev/blob/master/libs/prelude/Prelude/Interfaces.idr
+
 -- same as lambda but without comments...
 
 
@@ -71,7 +75,7 @@ human expr = case expr of
 
   PUSH1    => "push1"
   PUSH2    => "push2"
-  PUSH32   => "push32"
+  PUSH32 val   => "push32 " ++ 
 
   POP     => "pop"
   DUP1    => "dup1" 
