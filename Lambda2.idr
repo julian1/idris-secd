@@ -107,15 +107,19 @@ data OpCode : Type where
   DATA : Bits8 -> OpCode
 
 
-
-length' : OpCode -> Integer
-length' expr = case expr of
-  PUSH1  _ => 1 + 1
-  PUSH2  _ => 1 + 2
-  PUSH20  _ => 1 + 20
-  PUSH32 _ => 1 + 32 
-  _ => 1
-
+-- a better way to get the length might be to format the opcodes
+-- and then count them...
+-- not sure. with an operand width this becomes easy
+length' : List OpCode -> Integer
+length' xs = 
+  -- needs to be left to right
+  foldr (\expr, acc => acc + f expr) 0 xs
+    where f expr = case expr of
+            PUSH1  _ => 1 + 1
+            PUSH2  _ => 1 + 2
+            PUSH20 _ => 1 + 20
+            PUSH32 _ => 1 + 32 
+            _ => 1
 
 
 human : OpCode -> String
@@ -396,7 +400,9 @@ main = do
   let ops = compile $ call 30000 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
 
   -- let len = fromInteger .toIntegerNat .length $ ops 
-  -- printLn len
+
+  let len = length' ops 
+  printLn len
   
   let all = ops -- loader ++ ops
 
