@@ -9,6 +9,17 @@ bytes x =
     f (x,acc) = f $ (div x 256, mod x 256 :: acc)
 
 
+
+showHex : Integer -> String
+showHex x = 
+  foldr f "" $ bytes x 
+  where
+    f x acc = (b8ToHexString .fromInteger) x ++ acc 
+
+
+
+
+--- hmm a string can't be concatted ... actually probably can 
 -- what do we need  - basically right shift 
 -- an increasing number...
 

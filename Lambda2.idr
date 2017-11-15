@@ -28,6 +28,29 @@ data Expr : Type where
     -- Apply2, Apply3 etc...
 
 
+--
+
+
+bytes : Integer -> List Integer
+bytes x = 
+  let (_,xs) = f (x,[]) 
+  in xs where
+    f : (Integer, List Integer) -> (Integer, List Integer) 
+    f (0,acc) = (0, acc)
+    f (x,acc) = f $ (div x 256, mod x 256 :: acc)
+
+
+
+showHex : Integer -> String
+showHex x = 
+  foldr f "" $ bytes x 
+  where
+    f x acc = (b8ToHexString .fromInteger) x ++ acc 
+
+
+
+
+
 -- interface with Number ...
 Num Expr where
     (+) = Add 
@@ -75,7 +98,7 @@ human expr = case expr of
 
   PUSH1    => "push1"
   PUSH2    => "push2"
-  PUSH32 val   => "push32 " ++ 
+  PUSH32 val   => "push32 0x" ++ showHex val
 
   POP     => "pop"
   DUP1    => "dup1" 
