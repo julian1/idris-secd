@@ -1,11 +1,12 @@
 
 
-integerToBytes : Integer -> (Integer, List Integer) 
-integerToBytes x = k (x,[]) where
-
-  k : (Integer, List Integer) -> (Integer, List Integer) 
-  k (0,acc) = (0, acc)
-  k (x,acc) = k $ (div x 256, mod x 256 :: acc)
+bytes : Integer -> List Integer
+bytes x = 
+  let (_,xs) = f (x,[]) 
+  in xs where
+    f : (Integer, List Integer) -> (Integer, List Integer) 
+    f (0,acc) = (0, acc)
+    f (x,acc) = f $ (div x 256, mod x 256 :: acc)
 
 
 -- what do we need  - basically right shift 
