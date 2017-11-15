@@ -67,8 +67,8 @@ data OpCode : Type where
   ADD     : OpCode
   ISZERO  : OpCode
 
-  PUSH1   : OpCode
-  PUSH2   : OpCode
+  PUSH1   : Integer -> OpCode
+  PUSH2   : Integer -> OpCode
   PUSH32  : Integer -> OpCode 
 
   POP     : OpCode
@@ -91,14 +91,24 @@ data OpCode : Type where
   VAL : Bits8 -> OpCode
 
 
+
+length : OpCode -> Integer
+length expr = case expr of
+  PUSH1  _ => 1 + 1
+  PUSH2  _ => 1 + 2
+  PUSH32 _ => 1 + 32 
+  _ => 1
+
+
+
 human : OpCode -> String
 human expr = case expr of
   ADD     => "add"
   ISZERO  => "not"
 
-  PUSH1    => "push1"
-  PUSH2    => "push2"
-  PUSH32 val   => "push32 0x" ++ showHex val
+  PUSH1  val => "push1 0x" ++ showHex val
+  PUSH2  val => "push2 0x" ++ showHex val
+  PUSH32 val => "push32 0x" ++ showHex val
 
   POP     => "pop"
   DUP1    => "dup1" 
@@ -128,10 +138,14 @@ machine expr = case expr of
   ADD     => "01"
   ISZERO  => "15"
 
+  PUSH1  val => "60" ++ showHex val
+  PUSH2  val => "61" ++ showHex val
+  PUSH32 val => "7f" ++ showHex val
+{-
   PUSH1   => "60"
   PUSH2   => "61"
   PUSH32  => "7f"
-
+-}
   POP     => "50"
   DUP1    => "80" 
 
@@ -147,6 +161,7 @@ machine expr = case expr of
   CODECOPY => "39"
   CALL    => "f1"
 
+  -- TODO change name VAL to DATA?
   VAL bits8 => b8ToHexString bits8
 
 
@@ -155,7 +170,7 @@ compile : Expr -> List OpCode
 compile expr = case expr of
   Number val =>
     let v = fromInteger val in
-    [ PUSH1, VAL v ]
+    [ PUSH1 v ]
 
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
   Add lhs rhs =>
@@ -173,9 +188,9 @@ compile expr = case expr of
         lr = toIntegerNat $ length r
     in
       c ++ [ ISZERO ]
-      ++ [ PUSH1, VAL $ fromInteger (ll + 8), PC, ADD, JUMPI ] 
+      ++ [ PUSH1 $ fromInteger (ll + 8), PC, ADD, JUMPI ] 
       ++ l  
-      ++ [ PUSH1, VAL $ fromInteger (lr + 4), PC, ADD, JUMP ] 
+      ++ [ PUSH1 $ fromInteger (lr + 4), PC, ADD, JUMP ] 
       ++ [ JUMPDEST ] 
       ++ r  
       ++ [ JUMPDEST ] 
@@ -306,7 +321,7 @@ main' = do
 
   -- this works without var setup.
   let loader' = the (List OpCode) [ 
-        PUSH1, VAL len, DUP1, PUSH1, VAL 0x0B, PUSH1, VAL 0, CODECOPY, PUSH1, VAL 0, RETURN 
+        PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN 
         ];
 
   -- hmmm return looks like it returns immediately
@@ -314,8 +329,8 @@ main' = do
 
   -- this works - as solidity like setup.
   let loader = the (List OpCode) [ 
-        PUSH1, VAL 0x60, PUSH1, VAL 0x40, MSTORE, 
-        PUSH1, VAL len, DUP1, PUSH1, VAL (0x10 + 0), PUSH1, VAL 0, CODECOPY, PUSH1, VAL 0, RETURN  --,
+        PUSH1 0x60, PUSH1 0x40, MSTORE, 
+        PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN  
         -- PUSH1, VAL 0x00, PUSH1, VAL 0xff
         ];
 
