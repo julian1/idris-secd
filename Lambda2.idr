@@ -103,7 +103,8 @@ data OpCode : Type where
 
 --  BALANCE   : OpCode
 
-  VAL : Bits8 -> OpCode
+  -- allow injecting raw data
+  DATA : Bits8 -> OpCode
 
 
 
@@ -142,7 +143,7 @@ human expr = case expr of
   CODECOPY => "codecopy"
   CALL    => "call"
 
-  VAL bits8 => "0x" ++ b8ToHexString bits8
+  DATA bits8 => "0x" ++ b8ToHexString bits8
 
 
 -- https://ethereum.stackexchange.com/questions/119/what-opcodes-are-available-for-the-ethereum-evm
@@ -181,8 +182,8 @@ machine expr = case expr of
   CODECOPY => "39"
   CALL    => "f1"
 
-  -- TODO change name VAL to DATA?
-  VAL bits8 => b8ToHexString bits8
+  -- TODO change name DATA to DATA?
+  DATA bits8 => b8ToHexString bits8
 
 
 -- 
@@ -364,7 +365,7 @@ main' = do
   let loader = the (List OpCode) [ 
         PUSH1 0x60, PUSH1 0x40, MSTORE, 
         PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN  
-        -- PUSH1, VAL 0x00, PUSH1, VAL 0xff
+        -- PUSH1, DATA 0x00, PUSH1, DATA 0xff
         ];
 
   let all = loader ++ ops
