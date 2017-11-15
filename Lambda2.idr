@@ -29,6 +29,9 @@ data Expr : Type where
 
 
 --
+natToInteger : Nat -> Integer
+natToInteger = fromInteger . toIntegerNat 
+
 
 
 bytes : Integer -> List Integer
@@ -41,9 +44,19 @@ bytes x =
 
 
 
-showHex : Integer -> String
-showHex x = 
-  foldr f "" $ bytes x 
+lpad : Nat -> a -> List a -> List a 
+lpad l x xs = 
+  replicate (minus l $ length xs) x  ++ xs
+
+
+-- OK. we need to pad appropriately...
+-- eg. 0x0 should give a value...
+showHex : Nat -> Integer -> String
+showHex w x = 
+  let b = bytes x in
+  let b' = lpad w 0 b  in
+
+  foldr f "" $ b'
   where
     f x acc = (b8ToHexString .fromInteger) x ++ acc 
 
@@ -67,8 +80,10 @@ data OpCode : Type where
   ADD     : OpCode
   ISZERO  : OpCode
 
+  -- need to add operand...
   PUSH1   : Integer -> OpCode
   PUSH2   : Integer -> OpCode
+  PUSH20  : Integer -> OpCode
   PUSH32  : Integer -> OpCode 
 
   POP     : OpCode
@@ -92,10 +107,11 @@ data OpCode : Type where
 
 
 
-length : OpCode -> Integer
-length expr = case expr of
+length' : OpCode -> Integer
+length' expr = case expr of
   PUSH1  _ => 1 + 1
   PUSH2  _ => 1 + 2
+  PUSH20  _ => 1 + 20
   PUSH32 _ => 1 + 32 
   _ => 1
 
@@ -106,9 +122,10 @@ human expr = case expr of
   ADD     => "add"
   ISZERO  => "not"
 
-  PUSH1  val => "push1 0x" ++ showHex val
-  PUSH2  val => "push2 0x" ++ showHex val
-  PUSH32 val => "push32 0x" ++ showHex val
+  PUSH1  val => "push1 0x" ++ showHex 1 val
+  PUSH2  val => "push2 0x" ++ showHex 2 val
+  PUSH20 val => "push20 0x" ++ showHex 20 val
+  PUSH32 val => "push32 0x" ++ showHex 32 val
 
   POP     => "pop"
   DUP1    => "dup1" 
@@ -138,9 +155,12 @@ machine expr = case expr of
   ADD     => "01"
   ISZERO  => "15"
 
-  PUSH1  val => "60" ++ showHex val
-  PUSH2  val => "61" ++ showHex val
-  PUSH32 val => "7f" ++ showHex val
+  -- OK - 0x00 -> gives an empty string is not being correctly formatted...
+  -- I think all of the formatting is a bit off...
+  PUSH1  val => "60" ++ showHex 1 val
+  PUSH2  val => "61" ++ showHex 2 val
+  PUSH20 val => "73" ++ showHex 20 val
+  PUSH32 val => "7f" ++ showHex 32 val
 {-
   PUSH1   => "60"
   PUSH2   => "61"
@@ -165,12 +185,23 @@ machine expr = case expr of
   VAL bits8 => b8ToHexString bits8
 
 
+-- 
+-- let v = fromInteger val in
+-- the formatting must spit out the correct number of bytes...
 
 compile : Expr -> List OpCode
 compile expr = case expr of
   Number val =>
-    let v = fromInteger val in
-    [ PUSH1 v ]
+    if val <= 0xff then
+      [ PUSH1 val ]
+    else if val <= 0xffff then
+      [ PUSH2 val ]
+--    else if val <= 0xffffffffffffffffffffffffffffffffff then
+    else
+      [ PUSH20 val ]
+--    else
+--      [ PUSH32 val ]
+
 
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
   Add lhs rhs =>
@@ -284,8 +315,8 @@ myfunc3 c =
       else 123 
 
 
-myfunc4: Expr
-myfunc4 = call 0x0 0x0 0x0 0x0 0x0 0x0 0x0 
+-- myfunc4: Expr
+-- myfunc4 = call 0x0 0x0 0x0 0x0 0x0 0x0 0x0 
 
 
 --mycall : Expr -> Expr
@@ -315,7 +346,9 @@ main' = do
   -- let ops = compile $ myfunc3 Arg1 
   let ops = compile $ myfunc0
 
+  -- TODO FIXME
   let len = fromInteger .toIntegerNat .length $ ops 
+  -- let len = length'  ops 
 
   printLn len
 
@@ -354,12 +387,15 @@ main = do
   -- address value is truncated....
 
   -- to call simple code or method, we just need to do a send transaction with data.
+  -- Ok, we have a problem with interpreting an integer
+
+  -- address is 20 bytes...
 
   --call(g, a, v, in, insize, out, outsize)    
   let ops = compile $ call 30000 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
-  let len = fromInteger .toIntegerNat .length $ ops 
 
-  printLn len
+  -- let len = fromInteger .toIntegerNat .length $ ops 
+  -- printLn len
   
   let all = ops -- loader ++ ops
 
