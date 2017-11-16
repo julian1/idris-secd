@@ -196,16 +196,20 @@ machine expr = case expr of
 
 compile : Expr -> List OpCode
 compile expr = case expr of
+
   Number val =>
     if val <= 0xff then
       [ PUSH1 val ]
-    else if val <= 0xffff then
+    else if val <= pow 2 (2 * 8) then   -- ie 0xffff 
       [ PUSH2 val ]
---    else if val <= 0xffffffffffffffffffffffffffffffffff then
-    else
+    else if val <= pow 2 (20 * 8) then  -- ie 0xffffffffffffffffffffffffffffffffff 
       [ PUSH20 val ]
---    else
---      [ PUSH32 val ]
+    else if val <= pow 2 (32 * 8) then
+      [ PUSH32 val ]
+    -- FIXME error...
+    -- we need a proof the Integer value was <= 32 bytes ...
+    else
+      [ DATA 0xff ]
 
 
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
