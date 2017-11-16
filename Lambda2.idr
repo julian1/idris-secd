@@ -18,12 +18,13 @@ data Expr : Type where
   If : Expr -> Expr  -> Expr -> Expr
 
 
-  -- call(g, a, v, in, insize, out, outsize)    
   -- monadic - not a pure expression
+  -- call(g, a, v, in, insize, out, outsize)    
   Call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
   Gas : Expr
   Address : Expr
   MStore : Expr -> Expr -> Expr
+  MLoad : Expr -> Expr 
 
   -- lambda args - placeholders -- change to Integer for the placehodl
   Arg1 : Expr
@@ -159,6 +160,7 @@ data OpCode : Type where
   DUP1    : OpCode
 
   MSTORE  : OpCode 
+  MLOAD   : OpCode 
 
   JUMP    : OpCode
   JUMPI   : OpCode
@@ -207,6 +209,7 @@ human expr = case expr of
   DUP1    => "dup1" 
 
   MSTORE  => "mstore"
+  MLOAD   => "mload"
 
   JUMP    => "jump"
   JUMPI   => "jumpi"
@@ -243,6 +246,7 @@ machine expr = case expr of
   DUP1    => "80" 
 
   MSTORE  => "52"
+  MLOAD   => "51"
 
   JUMP    => "56"
   JUMPI   => "57"
@@ -322,8 +326,13 @@ compile expr = case expr of
   Gas => [ GAS ]
   Address => [ ADDRESS ]
 
-  MStore a b =>  
-    compile a ++ compile b ++ [ MSTORE ]
+  MStore v addr =>  
+    compile v ++ compile addr ++ [ MSTORE ]
+
+  MLoad addr =>  
+    compile addr ++ [ MLOAD ]
+
+
 
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
@@ -341,6 +350,8 @@ ifelse: Expr -> Expr -> Expr -> Expr
 ifelse = If
 
 
+
+-- these are just synonyms 
 -- is there a shorthand way of appropriating type?
 call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
 call = Call
@@ -348,6 +359,8 @@ call = Call
 mstore : Expr -> Expr -> Expr 
 mstore = MStore
 
+mload : Expr -> Expr 
+mload = MLoad
 
 gas : Expr
 gas = Gas
@@ -494,10 +507,12 @@ main = do
   -- let ops = compile $ call gas 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
 
   -- ok. problem. is that the memory is not an expressoin input. 
-
+  
+  -- 40 should be the a 
   let ops = 
-    (compile $ mstore 0x60 0x40 ) 
-    ++ (compile $ call gas address 0x0 0x0 0x0 0x60 0x01)
+--       (compile $ mstore 0x60 0x40 )  -- eg. 60 into 40
+--    ++ (compile $ mload 0x40 )        -- test load at 40 
+    [] ++ (compile $ call gas address 0x0 0x0 0x0 0x40 0x01)
 
   let hops = map human ops
   printLn hops
