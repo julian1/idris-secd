@@ -1,4 +1,7 @@
 
+-- import Debug.Error 
+import Debug.Trace
+
 -- https://github.com/idris-lang/Idris-dev/tree/master/libs/contrib/Data
 
 -- https://github.com/idris-lang/Idris-dev/blob/master/libs/prelude/Prelude/Interfaces.idr
@@ -28,16 +31,26 @@ data Expr : Type where
     -- Apply2, Apply3 etc...
 
 
---
+-- change name integerFromNat ?
 natToInteger : Nat -> Integer
 natToInteger = fromInteger . toIntegerNat 
+
+ 
+-- runtime assertion...
+-- > :exec myassert "whoot" (>10) 12
+myassert : String -> (a -> Bool) -> a -> a
+myassert message p x = 
+  case p x of
+    True => x
+    False => trace message x 
 
 
 
 bytes : Integer -> List Integer
 bytes x = 
   let (_,xs) = f (x,[]) 
-  in xs where
+  in xs 
+  where
     f : (Integer, List Integer) -> (Integer, List Integer) 
     f (0,acc) = (0, acc)
     f (x,acc) = f $ (div x 256, mod x 256 :: acc)
@@ -46,17 +59,24 @@ bytes x =
 
 lpad : Nat -> a -> List a -> List a 
 lpad l x xs = 
-  replicate (minus l $ length xs) x  ++ xs
+  replicate (l `minus` length xs) x  ++ xs
 
 
 -- OK. we need to pad appropriately...
 -- eg. 0x0 should give a value...
+
+-- need to detect an error condition...
+
+-- 
+
 showHex : Nat -> Integer -> String
 showHex w x = 
+  -- we should detect if the number overfills width ...
   let b = bytes x in
-  let b' = lpad w 0 b  in
+  let b' = lpad w 0 b in
+  let b'' = myassert "ERROR: integer exceeds width" (\b => length b <= w) b' in 
 
-  foldr f "" $ b'
+  foldr f "" $ b''
   where
     f x acc = (b8ToHexString .fromInteger) x ++ acc 
 
@@ -160,17 +180,12 @@ machine expr = case expr of
   ADD     => "01"
   ISZERO  => "15"
 
-  -- OK - 0x00 -> gives an empty string is not being correctly formatted...
   -- I think all of the formatting is a bit off...
   PUSH1  val => "60" ++ showHex 1 val
   PUSH2  val => "61" ++ showHex 2 val
   PUSH20 val => "73" ++ showHex 20 val
   PUSH32 val => "7f" ++ showHex 32 val
-{-
-  PUSH1   => "60"
-  PUSH2   => "61"
-  PUSH32  => "7f"
--}
+
   POP     => "50"
   DUP1    => "80" 
 
@@ -399,6 +414,7 @@ main = do
   -- Ok, we have a problem with interpreting an integer
 
   -- address is 20 bytes...
+
 
   --call(g, a, v, in, insize, out, outsize)    
   let ops = compile $ call 30000 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
