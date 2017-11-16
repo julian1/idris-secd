@@ -23,10 +23,14 @@ data Expr : Type where
   Call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
   Gas : Expr
   Address : Expr
+  MStore : Expr -> Expr -> Expr
 
   -- lambda args - placeholders -- change to Integer for the placehodl
   Arg1 : Expr
   Arg2 : Expr
+
+  -- we are going to need parenthesis, during parse... 
+  -- actually no... because we don't parse
 
   Apply : Expr -> Expr        
     -- eg. (\x -> x) 123
@@ -46,8 +50,49 @@ Num Expr where
 
   echo 606060405260058060106000396000f360AA60BB01 | ethrun 5a3060006000600060006000f1 | json_pp  | less
 
+  should be able to do this???
+  hevm exec --code 606060405260058060106000396000f360AA60BB01  --calldata 5a3060006000600060006001f1  --gas 1000 --debug
+
+  the address should be 0 i think. not the contract address?
+
+  we're going to need to look at how the web3 api does it with getData()
+
+  If we can't get the thing to return a value - .  
+
   OK 
     i think we need to push the current address. not refer to it as a literal...
+    the environment sets this up for us ok.
+
+    think we might need a ret 
+    or we need to push some data into the vectors.
+
+  ----
+    I KNOW WHAT THE PROBLEM IS - WE NEED A single FUCKING ARGUMENT. which represents the function eg. 0x inside .
+
+  can look at solidiy
+
+    address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
+    nameReg.call("register", "MyName");
+    nameReg.call(bytes4(keccak256("fun(uint256)")), a);
+
+  or web3,
+    var contract = web3.eth.contract(contractABI).at(contractAddress);
+    var callData = contract.functionName.getData(functionParameters);
+
+  do solidity, callData might be reversed, https://ethereum.stackexchange.com/questions/27481/decoding-contract-output-of-web3-eth-call
+
+  in and out are memory - not stack ... 
+
+    //callcode or delegatecall or call
+      let retval := call(g
+        , addr //address
+        , 0 //value
+        , o_code //mem in
+        , calldatasize //mem_insz
+        , o_code //reuse mem
+        , 32) //Hardcoded to 32 b return value
+        
+
 -}
 
 
@@ -277,6 +322,9 @@ compile expr = case expr of
   Gas => [ GAS ]
   Address => [ ADDRESS ]
 
+  MStore a b =>  
+    compile a ++ compile b ++ [ MSTORE ]
+
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
   -- BUT - how do we know to finish at the end of the function - easy just have a wrapper F
@@ -293,8 +341,13 @@ ifelse: Expr -> Expr -> Expr -> Expr
 ifelse = If
 
 
+-- is there a shorthand way of appropriating type?
 call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
 call = Call
+
+mstore : Expr -> Expr -> Expr 
+mstore = MStore
+
 
 gas : Expr
 gas = Gas
@@ -391,8 +444,7 @@ main' = do
   let ops = compile $ myfunc0
 
   -- TODO FIXME
-  let len = fromInteger .toIntegerNat .length $ ops 
-  -- let len = length'  ops 
+  let len = length'  ops 
 
   printLn len
 
@@ -403,13 +455,14 @@ main' = do
 
   -- hmmm return looks like it returns immediately
   -- OR maybe --------   we just do lots of codecopy but don't return
-
+{-
   -- this works - as solidity like setup.
   let loader = the (List OpCode) [ 
         PUSH1 0x60, PUSH1 0x40, MSTORE, 
         PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN  
         -- PUSH1, DATA 0x00, PUSH1, DATA 0xff
         ];
+-}
 
   let all = loader ++ ops
 
@@ -441,13 +494,10 @@ main = do
 
   --call(g, a, v, in, insize, out, outsize)    
   -- let ops = compile $ call gas 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
-  let ops = compile $ call gas address 0x0 0x0 0x0 0x0 0x0 
+  let ops = compile $ call gas address 0x0 0x0 0x0 0x0 0x01
 
-  -- let len = fromInteger .toIntegerNat .length $ ops 
+  -- are we pushing in reverse....
 
-  let len = length' ops 
-  printLn len
-  
   let all = ops -- loader ++ ops
 
   let hops = map human all
