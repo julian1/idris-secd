@@ -248,6 +248,8 @@ compile expr = case expr of
 
   -- stateful probably doesn't want to be modelled as expression syntax
   -- call(g, a, v, in, insize, out, outsize)    
+  -- call(g, a, v, in, insize, out, outsize), call contract at 
+  -- address a with input mem[in..(in+insize)) providing g gas and v wei and output area mem[out..(out+outsize)) ...
   Call g a v in_ insize out outsize => 
     let g' = compile g
         a' = compile a
