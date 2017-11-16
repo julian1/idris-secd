@@ -441,11 +441,10 @@ main' : IO ()
 main' = do
 
   -- let ops = compile $ myfunc3 Arg1 
-  let ops = compile $ myfunc0
+  -- let ops = compile $ myfunc0
+  let ops = compile $ mstore 0x60 0x40 
 
-  -- TODO FIXME
   let len = length'  ops 
-
   printLn len
 
   -- this works without var setup.
@@ -455,14 +454,13 @@ main' = do
 
   -- hmmm return looks like it returns immediately
   -- OR maybe --------   we just do lots of codecopy but don't return
-{-
+
   -- this works - as solidity like setup.
   let loader = the (List OpCode) [ 
         PUSH1 0x60, PUSH1 0x40, MSTORE, 
         PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN  
         -- PUSH1, DATA 0x00, PUSH1, DATA 0xff
         ];
--}
 
   let all = loader ++ ops
 
@@ -494,16 +492,17 @@ main = do
 
   --call(g, a, v, in, insize, out, outsize)    
   -- let ops = compile $ call gas 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
-  let ops = compile $ call gas address 0x0 0x0 0x0 0x0 0x01
 
-  -- are we pushing in reverse....
+  -- ok. problem. is that the memory is not an expressoin input. 
 
-  let all = ops -- loader ++ ops
+  let ops = 
+    (compile $ mstore 0x60 0x40 ) 
+    ++ (compile $ call gas address 0x0 0x0 0x0 0x60 0x01)
 
-  let hops = map human all
+  let hops = map human ops
   printLn hops
 
-  let mops = foldl (++) "" $ map machine all
+  let mops = foldl (++) "" $ map machine ops
   printLn mops
 
 
