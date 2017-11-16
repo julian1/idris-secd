@@ -31,7 +31,15 @@ data Expr : Type where
     -- Apply2, Apply3 etc...
 
 
--- change name integerFromNat ?
+-- interface with Number ...
+Num Expr where
+    (+) = Add 
+    (*) = Add 
+    fromInteger n = Number n 
+
+
+
+-- rename integerFromNat ?
 natToInteger : Nat -> Integer
 natToInteger = fromInteger . toIntegerNat 
 
@@ -62,12 +70,7 @@ lpad l x xs =
   replicate (l `minus` length xs) x  ++ xs
 
 
--- OK. we need to pad appropriately...
--- eg. 0x0 should give a value...
 
--- need to detect an error condition...
-
--- 
 
 showHex : Nat -> Integer -> String
 showHex w x = 
@@ -75,7 +78,6 @@ showHex w x =
   let b = bytes x in
   let b' = lpad w 0 b in
   let b'' = myassert "ERROR: integer exceeds width" (\b => length b <= w) b' in 
-
   foldr f "" $ b''
   where
     f x acc = (b8ToHexString .fromInteger) x ++ acc 
@@ -84,17 +86,7 @@ showHex w x =
 
 
 
--- interface with Number ...
-Num Expr where
-    (+) = Add 
-    (*) = Add 
-    fromInteger n = Number n 
 
-{-
-0x60    PUSH1   Place 1 byte item on stack
-0x61    PUSH2   Place 2-byte item on stack
-0x7f    PUSH32
--}
 
 data OpCode : Type where
   ADD     : OpCode
