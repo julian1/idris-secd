@@ -21,8 +21,8 @@ data Expr : Type where
   -- call(g, a, v, in, insize, out, outsize)    
   -- monadic - not a pure expression
   Call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
-
   Gas : Expr
+  Address : Expr
 
   -- lambda args - placeholders -- change to Integer for the placehodl
   Arg1 : Expr
@@ -39,6 +39,16 @@ Num Expr where
     (*) = Add 
     fromInteger n = Number n 
 
+{-
+       { [echo <bytecode>;]... } | ethrun [<calldata>...]
+
+  echo 606060405260058060106000396000f360AA60BB01 | ethrun 5a73AEBC05CB911A4EC6F541C3590DEEBAB8FCA797FB60006000600060006000f1 | json_pp | less
+
+  echo 606060405260058060106000396000f360AA60BB01 | ethrun 5a3060006000600060006000f1 | json_pp  | less
+
+  OK 
+    i think we need to push the current address. not refer to it as a literal...
+-}
 
 
 -- rename integerFromNat ?
@@ -116,6 +126,7 @@ data OpCode : Type where
   CALL     : OpCode
 
   GAS      : OpCode
+  ADDRESS  : OpCode
 --  BALANCE   : OpCode
 
   -- allow injecting raw data
@@ -162,6 +173,7 @@ human expr = case expr of
   CODECOPY => "codecopy"
   CALL    => "call"
   GAS     => "gas"
+  ADDRESS => "address"
 
   DATA bits8 => "0x" ++ b8ToHexString bits8
 
@@ -197,6 +209,7 @@ machine expr = case expr of
   CODECOPY => "39"
   CALL    => "f1"
   GAS     => "5a"
+  ADDRESS => "30"
 
   -- TODO change name DATA to DATA?
   DATA bits8 => b8ToHexString bits8
@@ -262,6 +275,7 @@ compile expr = case expr of
     g' ++ a' ++ v' ++ in_' ++ insize' ++ out' ++ outsize' ++ [ CALL ]
 
   Gas => [ GAS ]
+  Address => [ ADDRESS ]
 
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
@@ -284,6 +298,11 @@ call = Call
 
 gas : Expr
 gas = Gas
+
+address : Expr
+address = Address
+
+
 
 expr : Expr
 expr =
@@ -421,7 +440,8 @@ main = do
   -- idris_crash "whhott"
 
   --call(g, a, v, in, insize, out, outsize)    
-  let ops = compile $ call gas 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
+  -- let ops = compile $ call gas 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
+  let ops = compile $ call gas address 0x0 0x0 0x0 0x0 0x0 
 
   -- let len = fromInteger .toIntegerNat .length $ ops 
 
