@@ -3,8 +3,8 @@
 import Debug.Trace
 
 -- https://github.com/idris-lang/Idris-dev/tree/master/libs/contrib/Data
-
 -- https://github.com/idris-lang/Idris-dev/blob/master/libs/prelude/Prelude/Interfaces.idr
+-- https://github.com/idris-lang/Idris-dev/blob/master/libs/base/Debug/Trace.idr
 
 -- same as lambda but without comments...
 
@@ -18,9 +18,11 @@ data Expr : Type where
   If : Expr -> Expr  -> Expr -> Expr
 
 
-  --call(g, a, v, in, insize, out, outsize)    
-  -- not a pure expression
+  -- call(g, a, v, in, insize, out, outsize)    
+  -- monadic - not a pure expression
   Call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
+
+  Gas : Expr
 
   -- lambda args - placeholders -- change to Integer for the placehodl
   Arg1 : Expr
@@ -113,6 +115,7 @@ data OpCode : Type where
   CODECOPY : OpCode
   CALL     : OpCode
 
+  GAS      : OpCode
 --  BALANCE   : OpCode
 
   -- allow injecting raw data
@@ -158,6 +161,7 @@ human expr = case expr of
 
   CODECOPY => "codecopy"
   CALL    => "call"
+  GAS     => "gas"
 
   DATA bits8 => "0x" ++ b8ToHexString bits8
 
@@ -192,6 +196,7 @@ machine expr = case expr of
 
   CODECOPY => "39"
   CALL    => "f1"
+  GAS     => "5a"
 
   -- TODO change name DATA to DATA?
   DATA bits8 => b8ToHexString bits8
@@ -213,10 +218,8 @@ compile expr = case expr of
       [ PUSH20 val ]
     else if val <= pow 2 (32 * 8) then
       [ PUSH32 val ]
-    -- FIXME error...
-    -- we need a proof the Integer value was <= 32 bytes ...
     else
-      [ DATA 0xff ]
+      trace "ERROR: integer too large" []
 
 
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
@@ -256,6 +259,7 @@ compile expr = case expr of
     in
     g' ++ a' ++ v' ++ in_' ++ insize' ++ out' ++ outsize' ++ [ CALL ]
 
+  Gas => [ GAS ]
 
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
@@ -275,6 +279,9 @@ ifelse = If
 
 call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
 call = Call
+
+gas : Expr
+gas = Gas
 
 expr : Expr
 expr =
@@ -404,12 +411,15 @@ main = do
 
   -- to call simple code or method, we just need to do a send transaction with data.
   -- Ok, we have a problem with interpreting an integer
-
   -- address is 20 bytes...
 
+  -- actually we should just push the current amount of gas...
+  -- we want a gas opCode...
+
+  -- idris_crash "whhott"
 
   --call(g, a, v, in, insize, out, outsize)    
-  let ops = compile $ call 30000 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
+  let ops = compile $ call gas 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
 
   -- let len = fromInteger .toIntegerNat .length $ ops 
 
