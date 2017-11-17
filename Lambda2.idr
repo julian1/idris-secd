@@ -44,12 +44,6 @@ data Expr : Type where
     -- Apply2, Apply3 etc...
 
 
--- interface with Number ...
-Num Expr where
-    (+) = Add 
-    (*) = Add 
-    fromInteger n = Number n 
-
 {-
        { [echo <bytecode>;]... } | ethrun [<calldata>...]
 
@@ -319,27 +313,21 @@ compile expr = case expr of
 
 
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
-  Add lhs rhs =>
-    compile lhs
-    ++ compile rhs
-    ++ [ ADD ] --  are we doing this around the right way
+  -- not sure...
+  Add a b => compile b ++  compile a ++ [ ADD ]
 
-  Sub lhs rhs =>
-    compile lhs
-    ++ compile rhs
-    ++ [ SUB ] --  are we doing this around the right way
+  Sub a b => compile b ++ compile a ++ [ SUB ] 
  
-  
   -- relative jump labeling
   -- none of this list concat is efficient. probably should use join/flatten 
-  If cond lhs rhs =>
-    let c = compile cond
-        l = compile lhs
-        r = compile rhs
+  If pred a b =>
+    let p = compile pred
+        l = compile a
+        r = compile b
         ll = toIntegerNat $ length l
         lr = toIntegerNat $ length r
     in
-      c ++ [ ISZERO ]
+      p ++ [ ISZERO ]
       ++ [ PUSH1 $ fromInteger (ll + 8), PC, ADD, JUMPI ] 
       ++ l  
       ++ [ PUSH1 $ fromInteger (lr + 4), PC, ADD, JUMP ] 
@@ -361,17 +349,16 @@ compile expr = case expr of
         out' = compile out
         outsize' = compile outsize
     in
-    g' ++ a' ++ v' ++ in_' ++ insize' ++ out' ++ outsize' ++ [ CALL ]
+    -- g' ++ a' ++ v' ++ in_' ++ insize' ++ out' ++ outsize' ++ [ CALL ]
+    outsize' ++ out' ++ insize' ++ in_' ++  v' ++ a'  ++ g' ++ [ CALL ]
 
   Gas => [ GAS ]
   Address => [ ADDRESS ]
 
-  MStore v addr =>  
-    compile v ++ compile addr ++ [ MSTORE ]
+  -- mstore(addr, v)
+  MStore v addr => compile addr ++ compile v ++ [ MSTORE ]
 
-  MLoad addr =>  
-    compile addr ++ [ MLOAD ]
-
+  MLoad addr => compile addr ++ [ MLOAD ]
 
 
   -- var is on the stack so there's nothing to do...
@@ -386,13 +373,21 @@ compile expr = case expr of
       compile e
       -- and then pop off any arguments...
 
+
+----------------
+-- synonyms
+-- these are just synonyms 
+-- is there a shorthand way of appropriating type?
+
+-- interface with Number ...
+Num Expr where
+    (+) = Add 
+    (*) = Add  -- FIXME
+    fromInteger n = Number n 
+
 ifelse: Expr -> Expr -> Expr -> Expr
 ifelse = If
 
-
-
--- these are just synonyms 
--- is there a shorthand way of appropriating type?
 call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr 
 call = Call
 
@@ -566,6 +561,8 @@ main' = do
     If memory is [5, 6, 7, 8, 9, 10], a return with offsets 1, 4 would produce a result (output) of 3 bytes (6, 7, 8).
   -}
 
+  -- so what do we want to do here... 
+  -- lets check the sub works...
 
   printLn "before error"
   let x = the Void $ error "whoot"
