@@ -8,8 +8,11 @@ import Debug.Trace
 -- https://github.com/idris-lang/Idris-dev/blob/master/libs/prelude/Prelude/Interfaces.idr
 -- https://github.com/idris-lang/Idris-dev/blob/master/libs/base/Debug/Trace.idr
 
--- this is really good, shows a better debugger also, 
+-- good op-codes - eg. operands 
 -- https://github.com/CoinCulture/evm-tools/blob/master/analysis/guide.md
+
+-- solidity primitives /assembly
+-- http://solidity.readthedocs.io/en/develop/assembly.html
 
 -- same as lambda but without comments...
 
@@ -33,6 +36,10 @@ data Expr : Type where
   MStore : Expr -> Expr -> Expr
   MLoad : Expr -> Expr 
   Return : Expr -> Expr -> Expr
+
+  -- log0(p, s)  -   log without topics and data mem[p..(p+s))
+  Log0 : Expr -> Expr -> Expr 
+
 
   -- lambda args - placeholders -- change to Integer for the placehodl
   Arg1 : Expr
@@ -139,6 +146,9 @@ data OpCode : Type where
   PC      : OpCode
   JUMPDEST : OpCode
   RETURN  : OpCode
+
+  LOG0    : OpCode
+
   STOP    : OpCode    -- halts execution
 
   CODECOPY : OpCode
@@ -192,6 +202,7 @@ human expr = case expr of
   PC      => "pc"
   JUMPDEST => "jumpdest"
   RETURN  => "return"
+  LOG0    => "log0"
   STOP    => "stop"
 
   CODECOPY => "codecopy"
@@ -232,6 +243,7 @@ machine expr = case expr of
   PC      => "58"
   JUMPDEST => "5b"
   RETURN  => "f3"
+  LOG0    => "a0"
   STOP    => "00"
 
   CODECOPY => "39"
@@ -311,7 +323,12 @@ compile expr = case expr of
 
   MLoad addr => compile addr ++ [ MLOAD ]
 
+  -- return(p, s)  -   end execution, return data mem[p..(p+s))
   Return addr val => compile val ++ compile addr ++ [ RETURN ]
+
+  -- log0(p, s)  -   log without topics and data mem[p..(p+s))
+  Log0 addr val  => compile val ++ compile addr ++ [ LOG0 ]
+
 
 
   -- var is on the stack so there's nothing to do...
@@ -349,6 +366,10 @@ mstore = MStore
 
 return : Expr -> Expr -> Expr 
 return = Return
+
+log0 : Expr -> Expr -> Expr 
+log0 = Log0
+
 
 minus : Expr -> Expr -> Expr 
 minus = Sub
@@ -449,6 +470,7 @@ main = do
   -- https://ropsten.etherscan.io/address/0xf5d27939d55b3dd006505c2fa37737b09ebacd71#code
   let ops = 
       (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee ) 
+      ++ (compile $ log0 0x00 32 )
       ++ (compile $ return 0x00 32 )
       -- ++ [ PUSH1 0x0, PUSH1 32, RETURN ] 
    
@@ -458,18 +480,14 @@ main = do
   printLn len
 
   -- this works without var setup.
-  let loader' = the (List OpCode) [ 
+  let loader = the (List OpCode) [ 
         PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN 
         ];
 
-  -- hmmm return looks like it returns immediately
-  -- OR maybe --------   we just do lots of codecopy but don't return
-
   -- this works - as solidity like setup.
-  let loader = the (List OpCode) [ 
+  let loader' = the (List OpCode) [ 
         PUSH1 0x60, PUSH1 0x40, MSTORE, 
         PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN  
-        -- PUSH1, DATA 0x00, PUSH1, DATA 0xff
         ];
 
   let all = loader ++ ops
@@ -478,7 +496,7 @@ main = do
   printLn hops
 
   let mops = foldl (++) "" $ map machine all
-  printLn mops
+  putStrLn mops
 
 
 
