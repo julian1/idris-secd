@@ -32,6 +32,7 @@ data Expr : Type where
   Address : Expr
   MStore : Expr -> Expr -> Expr
   MLoad : Expr -> Expr 
+  Return : Expr -> Expr -> Expr
 
   -- lambda args - placeholders -- change to Integer for the placehodl
   Arg1 : Expr
@@ -46,76 +47,13 @@ data Expr : Type where
 
 
 {-
-       { [echo <bytecode>;]... } | ethrun [<calldata>...]
+  IT WORKED - WE RETURNED A VALUE,
+  the issue was we had the operands around the wrong way...
 
-  echo 606060405260058060106000396000f360AA60BB01 | ethrun 5a73AEBC05CB911A4EC6F541C3590DEEBAB8FCA797FB60006000600060006000f1 | json_pp | less
-
-  echo 606060405260058060106000396000f360AA60BB01 | ethrun 5a3060006000600060006000f1 | json_pp  | less
-
-  should be able to do this???
-  hevm exec --code 606060405260058060106000396000f360AA60BB01  --calldata 5a3060006000600060006001f1  --gas 1000 --debug
-
-  the address should be 0 i think. not the contract address?
-
-  we're going to need to look at how the web3 api does it with getData()
-
-  If we can't get the thing to return a value - .  
-
-  OK 
-    i think we need to push the current address. not refer to it as a literal...
-    the environment sets this up for us ok.
-
-    think we might need a ret 
-    or we need to push some data into the vectors.
-
-  ----
-    I KNOW WHAT THE PROBLEM IS - WE NEED A single FUCKING ARGUMENT. which represents the function eg. 0x inside .
-
-  can look at solidiy
-
-    address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
-    nameReg.call("register", "MyName");
-    nameReg.call(bytes4(keccak256("fun(uint256)")), a);
-        - can't interpret the return results...
-
-  or web3,
-    var contract = web3.eth.contract(contractABI).at(contractAddress);
-    var callData = contract.functionName.getData(functionParameters);
-
-  do solidity, callData might be reversed, https://ethereum.stackexchange.com/questions/27481/decoding-contract-output-of-web3-eth-call
-
-  in and out are memory - not stack ... 
-
-    //callcode or delegatecall or call
-      let retval := call(g
-        , addr //address
-        , 0 //value
-        , o_code //mem in
-        , calldatasize //mem_insz
-        , o_code //reuse mem
-        , 32) //Hardcoded to 32 b return value
-    -----------------    
-
-  OK - VERY IMPORTANT.
-
-  calldata is the calldata environment in the method. it's not a separate transaction to load...
- 
-  SO. am not sure it even works... 
-  ---
-
-  so it doesn't use memory - for context boundaries.. 
-  instead it uses calldata 
-
-  $ evm --debug --code 60003560203501 --input 00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000004
-VM STAT 6 OPs
-
-  eg. add the values 4 and 5
-  hevm exec --code 60003560203501  --calldata 00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000004   --gas 1000 --debug
-
-  CALLDATASIZE  - tells us the total data size. eg. 2x32 for the two args.
-                - but we can play tricks.
+  the returned value is written to mem.
+  then we return where in mem to find the value.
   
-  EG. we use div to right pad everywhere,
+  echo 606060405260298060106000396000f37f0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF60005260206000f3 | ethrun 00 | json_pp | less
 
 
 -}
@@ -319,7 +257,7 @@ compile expr = case expr of
 
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
   -- not sure...
-  Add a b => compile b ++  compile a ++ [ ADD ]
+  Add a b => compile b ++ compile a ++ [ ADD ]
   Sub a b => compile b ++ compile a ++ [ SUB ] 
   Mul a b => compile b ++ compile a ++ [ MUL ] 
  
@@ -361,9 +299,11 @@ compile expr = case expr of
   Address => [ ADDRESS ]
 
   -- mstore(addr, v)
-  MStore v addr => compile addr ++ compile v ++ [ MSTORE ]
+  MStore addr val => compile val ++ compile addr ++ [ MSTORE ]
 
   MLoad addr => compile addr ++ [ MLOAD ]
+
+  Return addr val => compile val ++ compile addr ++ [ RETURN ]
 
 
   -- var is on the stack so there's nothing to do...
@@ -398,6 +338,9 @@ call = Call
 
 mstore : Expr -> Expr -> Expr 
 mstore = MStore
+
+return : Expr -> Expr -> Expr 
+return = Return
 
 minus : Expr -> Expr -> Expr 
 minus = Sub
@@ -498,8 +441,10 @@ main = do
   -- https://ropsten.etherscan.io/address/0xf5d27939d55b3dd006505c2fa37737b09ebacd71#code
   let ops = 
       (compile $ mstore 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) 
-      ++ [ PUSH1 0x0, PUSH1 32, RETURN ] 
-    
+      ++ (compile $ return 0x00 32 )
+      -- ++ [ PUSH1 0x0, PUSH1 32, RETURN ] 
+   
+  -- should the return be reversed ... 
 
   let len = length'  ops 
   printLn len
@@ -665,3 +610,49 @@ call(g, a, v, in, insize, out, outsize)
   RETURN, returning memory bytes 0-16,   eg. returns a range. 
 -}
 
+{-
+
+    address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
+    nameReg.call("register", "MyName");
+    nameReg.call(bytes4(keccak256("fun(uint256)")), a);
+        - can't interpret the return results...
+
+  or web3,
+    var contract = web3.eth.contract(contractABI).at(contractAddress);
+    var callData = contract.functionName.getData(functionParameters);
+
+  do solidity, callData might be reversed, https://ethereum.stackexchange.com/questions/27481/decoding-contract-output-of-web3-eth-call
+
+  in and out are memory - not stack ... 
+
+    //callcode or delegatecall or call
+      let retval := call(g
+        , addr //address
+        , 0 //value
+        , o_code //mem in
+        , calldatasize //mem_insz
+        , o_code //reuse mem
+        , 32) //Hardcoded to 32 b return value
+    -----------------    
+
+  OK - VERY IMPORTANT.
+
+  calldata is the calldata environment in the method. it's not a separate transaction to load...
+ 
+  SO. am not sure it even works... 
+  ---
+
+  so it doesn't use memory - for context boundaries.. 
+  instead it uses calldata 
+
+  $ evm --debug --code 60003560203501 --input 00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000004
+VM STAT 6 OPs
+
+  eg. add the values 4 and 5
+  hevm exec --code 60003560203501  --calldata 00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000004   --gas 1000 --debug
+
+  CALLDATASIZE  - tells us the total data size. eg. 2x32 for the two args.
+                - but we can play tricks.
+  
+  EG. we use div to right pad everywhere,
+-}
