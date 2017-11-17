@@ -15,9 +15,8 @@
 
   also works when send transaction.
 
-  actually - it's probably not designed to sequence like ethrun ...
-
-  *** instead the data is run and calldata is passed as setup
+  HEVM - is designed to take code and calldata, and run both together.
+    not deploy multiple contracts and then use it...
 
   But that means that - we can just remove the damn init/deploy code and test a contract...
     - but i think the limitation is testing calling of different contracts deployed at different addresses ...
@@ -480,8 +479,24 @@ The argument of PUSH1 is also separated by white space
 -}
 
 
--- addLoader : IO ()
--- addLoader =  
+
+addLoader : List OpCode -> List OpCode
+addLoader ops =
+
+          let len = length' ops in
+          -- simple
+          let loader = the (List OpCode) [
+                PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+                ];
+          in
+          -- like solidity
+          let loader' = the (List OpCode) [
+                PUSH1 0x60, PUSH1 0x40, MSTORE,
+                PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+                ];
+          in loader ++ ops
+
+
 
 
 main : IO ()
@@ -491,8 +506,7 @@ main = do
   -- let ops = compile $ myfunc0
   -- https://ropsten.etherscan.io/address/0xf5d27939d55b3dd006505c2fa37737b09ebacd71#code
   let ops' =
-      (compile calldatasize)
-      ++ [ POP ]
+      (compile calldatasize) ++ [ POP ]
 
   let ops'' =
          (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee )
@@ -500,10 +514,25 @@ main = do
       ++ (compile $ return 0x00 32)
 
   -- works call ourselves...
-  let ops =
-       [ PUSH1 0xff, POP ]
+  -- how much data...
+  let ops''' =
+      (compile calldatasize) ++ [ POP ] -- report how much data was passed..
+
        ++ (compile $ call gas address 0x0 0x0 0x0 0x0 0x0 )
 
+  let ops =
+      (compile calldatasize) ++ [ POP ] -- report how much data was passed..
+
+      ++ (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee ) -- push some extra data...
+
+      ++ (compile $ call gas address 0x0 0x0 0x0 0x0 0x0 )
+
+
+
+  -- QUESTION - can we arbitrarily manipulate the 0x40 0x60 stack pointer? when calling? 
+  -- to make 
+
+  -- so lets try to push a value
 
   -- ok, so we can pass values in - and return values out - and can log.
   -- what we want to do now... have a code/function that calls another another contract...
@@ -516,27 +545,11 @@ main = do
 
   -- we can try calling our own 
 
-  -- maybe add loader code...
+  -- should be a separate function ...
   let all = the (List OpCode) $ 
      case False of 
-        True => 
-          let len = length' ops in
-
-          -- this works without var setup.
-          let loader = the (List OpCode) [
-                PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
-                ];
-          in
-
-          -- this works - as solidity like setup.
-          let loader' = the (List OpCode) [
-                PUSH1 0x60, PUSH1 0x40, MSTORE,
-                PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN
-                ];
-          in loader ++ ops
-
+        True => addLoader ops 
         False => ops 
-
 
 
   let hops = map human all
