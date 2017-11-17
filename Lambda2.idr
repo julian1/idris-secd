@@ -55,6 +55,11 @@ data Expr : Type where
   
   echo 606060405260298060106000396000f37f0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF60005260206000f3 | ethrun 00 | json_pp | less
 
+  NOTE - once we can call calldata - we can call constructor, then test, then tests all in the same thing.
+
+  same thing ought to work ... in hevm as well... 
+
+  hevm exec --code 606060405260298060106000396000f37f0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF60005260206000f3 --calldata 00  --gas 1000
 
 -}
 
@@ -440,7 +445,7 @@ main = do
   -- let ops = compile $ myfunc0
   -- https://ropsten.etherscan.io/address/0xf5d27939d55b3dd006505c2fa37737b09ebacd71#code
   let ops = 
-      (compile $ mstore 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) 
+      (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee ) 
       ++ (compile $ return 0x00 32 )
       -- ++ [ PUSH1 0x0, PUSH1 32, RETURN ] 
    
