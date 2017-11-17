@@ -1,4 +1,7 @@
 {-
+  TODO - write the output to a file... then can load it in hevm in simple bash script.
+  
+-----
   IT WORKED - WE RETURNED A VALUE,
   the issue was we had the operands around the wrong way...
 
@@ -20,6 +23,14 @@
 
   But that means that - we can just remove the damn init/deploy code and test a contract...
     - but i think the limitation is testing calling of different contracts deployed at different addresses ...
+
+  ----------------------------
+    VERY IMPORTANT
+    - we *can* run arbitrary code in a tx.  we do it by ommitting the 'to:' field
+      and running the code we want. it will leave behind a residial contract which is fine.
+
+  ----------------------------
+
 
 -}
 
@@ -504,6 +515,12 @@ addLoader ops =
     ];
   in loader ++ ops
 
+{-
+  I can use CODECOPY/RETURN to load a (non-solidity) contract into hevm with the single argument --code flag. To deploy multiple contracts - I am guessing the preferred way is with dynamic stub code that uses CREATE on each contract? 
+
+  actually we can test this completely...  by doing it on a single contract...
+
+-}
 
 
 
@@ -569,10 +586,22 @@ main = do
 
   -- so lets try to push a value
 TODO
-  send bloody eth... to another address or contract.
+  done - send bloody eth... to another address or contract.
     - can't see how to do this. we can send to ourselves. but that doesn't really show anything...
     - try sendTransaction to the contract we made - and then pass less eth a.
     - actually we could just burn it? by calling 0x00000 ? 
+
+  see if can create a transaction, that is more than just the abi,understand what gets
+    emitted from sendtransaction.
+
+
+    VERY IMPORTANT
+    - we *can* run arbitrary code in a tx.  we do it by ommitting the 'to:' field
+      and running the code we want. it will leave behind a residial contract which is fine.
+
+    - so we should try this.
+    - eg. we call call against another contract. and can do whatever we want.
+  ------------
 
   figure out how to call a contract with stack in a certain state etc..
 
