@@ -530,11 +530,19 @@ main = do
 
   -- works - call contract with some data
   -- call(g, a, v, in, insize, out, outsize)
-  let ops =
+  let ops'''' =
       (compile calldatasize) ++ [ POP ] -- report how much data was passed..
       ++ (compile $ balance address ) ++ [ POP ] -- report how much data was passed..
-      ++ (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee ) -- push some extra data...
-      ++ (compile $ call gas address 0x0 0x0 32 0x0 0x0 ) -- call with the data
+      ++ (compile $ mstore 0x05 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee ) -- store data at 05 ...
+      ++ (compile $ call gas address 0x0 0x5 32 0x0 0x0 ) -- call passing the data
+
+  -- works - sends 1 eth to address 0x, use hevm with --value flag.
+  let ops =
+      (compile $ balance address ) ++ [ POP ]        -- show eth amount
+      ++ (compile $ call gas 0x0 1 0x0 0x0 0x0 0x0 ) -- send 1 eth to 0x000000 
+      ++ (compile $ balance address ) ++ [ POP ]     -- show eth amount
+      ++ [ STOP ]
+
 
 
   -- note that we haven't actually pulled the data that we send off...
@@ -562,6 +570,10 @@ main = do
   -- so lets try to push a value
 TODO
   send bloody eth... to another address or contract.
+    - can't see how to do this. we can send to ourselves. but that doesn't really show anything...
+    - try sendTransaction to the contract we made - and then pass less eth a.
+    - actually we could just burn it? by calling 0x00000 ? 
+
   figure out how to call a contract with stack in a certain state etc..
 
   done - ok, so we can pass values in
