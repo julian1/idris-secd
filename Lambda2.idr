@@ -588,34 +588,20 @@ main = do
 
   -- it's a bit of a tangle
 
-{-
+  -- the way to use hevm with multiple contracts is with evm create?
 
- 776         0xf0 -> do
- 777           case stk of
- 778             (xValue:xOffset:xSize:xs) ->
- 779               burn g_create $ do
+  -- when calling create hevm gives me a page of stops, and the return address is 0x01, which 
+  -- I am interpreting as an error, rather than the created contract address ...
+  -- offset 
 
-
- 827         -- op: CALL
- 828         0xf1 ->
- 829           case stk of
- 830             ( xGas
- 831               : (num -> xTo)
- 832               : xValue
- 833               : xInOffset
- 834               : xInSize
- 835               : xOutOffset
- 836               : xOutSize
- 837               : xs
- 838              ) -> do
--}
-
+  -- WE NEED TO LOAD into MEMORY FIRST !!!!
 
   let all =
-          (compile $ create 0 21 5 )                        -- create contract value 0, address 21, len 3.  we can use STOP for nops...
-       ++ (compile $ call gas 0x1   0x0 0x0 0x0 0x0 0x0 )   -- call contract 
+          (compile $ create 0 23 5 )                        -- create contract value 0, address 22, len 5
+       ++ [ POP ]
+       ++ (compile $ call gas 0x1  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
        ++ [ STOP ]
-       ++ (compile $ add 3 4) 
+       ++ (compile $ add 3 4)                               -- simple contract to add two numbers - offset is 22
 
   -- when we do a create call, hevm changes context and gives us a screen of stop
   -- and returns value 0x01 which seems wrong.
