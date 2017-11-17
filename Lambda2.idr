@@ -19,6 +19,7 @@ data Expr : Type where
   Number : Integer -> Expr        -- eg. pushing on stack is one gas.
 
   Add : Expr -> Expr  -> Expr
+  Mul : Expr -> Expr  -> Expr
   Sub : Expr -> Expr  -> Expr
 
   If : Expr -> Expr  -> Expr -> Expr
@@ -171,7 +172,9 @@ showHex w x =
 
 data OpCode : Type where
   ADD     : OpCode
+  MUL     : OpCode
   SUB     : OpCode
+
   ISZERO  : OpCode
 
   -- need to add operand...
@@ -222,6 +225,7 @@ length' xs =
 human : OpCode -> String
 human expr = case expr of
   ADD     => "add"
+  MUL     => "mul"
   SUB     => "sub"
 
   ISZERO  => "not"
@@ -260,6 +264,7 @@ human expr = case expr of
 machine : OpCode -> String
 machine expr = case expr of
   ADD     => "01"
+  MUL     => "02"
   SUB     => "03"
 
   ISZERO  => "15"
@@ -315,8 +320,8 @@ compile expr = case expr of
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types 
   -- not sure...
   Add a b => compile b ++  compile a ++ [ ADD ]
-
   Sub a b => compile b ++ compile a ++ [ SUB ] 
+  Mul a b => compile b ++ compile a ++ [ MUL ] 
  
   -- relative jump labeling
   -- none of this list concat is efficient. probably should use join/flatten 
@@ -382,7 +387,7 @@ compile expr = case expr of
 -- interface with Number ...
 Num Expr where
     (+) = Add 
-    (*) = Add  -- FIXME
+    (*) = Mul
     fromInteger n = Number n 
 
 ifelse: Expr -> Expr -> Expr -> Expr
@@ -406,7 +411,17 @@ gas = Gas
 address : Expr
 address = Address
 
+-- http://docs.idris-lang.org/en/latest/tutorial/syntax.html
+syntax "if" [test] "then" [t] "else" [e] = If test t e;
 
+syntax "var" [name] = Variable name;
+
+-- OK we can use {x} for bound variable names...
+-- syntax define {fname} {arg} ":=" [exp] = Apply exp 
+-- syntax "lambda"  {arg} ":=" [exp] = Apply exp 
+
+
+----------------
 
 expr : Expr
 expr =
@@ -426,20 +441,6 @@ function s expr = Apply expr
 
 
 -- OK there is support with dsl support... - including with lambdas.
-
--- http://docs.idris-lang.org/en/latest/tutorial/syntax.html
-syntax "if" [test] "then" [t] "else" [e] = If test t e;
-
--- no different to just a function called lambda ... 
--- but we might be able to use it more effectively...
--- syntax "lambda" [arg] [exp] = Apply exp;
-
-syntax "var" [name] = Variable name;
-
--- OK we can use {x} for bound variable names...
--- syntax define {fname} {arg} ":=" [exp] = Apply exp 
--- syntax "lambda"  {arg} ":=" [exp] = Apply exp 
-
 
 
 myfunc0: Expr
