@@ -265,6 +265,7 @@ machine expr = case expr of
   ADDRESS => "30"
 
   -- TODO change name DATA to DATA?
+  -- or DATA8 or BYTE8 ? 
   DATA bits8 => b8ToHexString bits8
 
 
@@ -385,11 +386,8 @@ return = Return
 calldatasize : Expr 
 calldatasize = CallDataSize
 
-
-
 log0 : Expr -> Expr -> Expr
 log0 = Log0
-
 
 minus : Expr -> Expr -> Expr
 minus = Sub
@@ -492,18 +490,31 @@ main = do
   -- let ops = compile $ myfunc3 Arg1
   -- let ops = compile $ myfunc0
   -- https://ropsten.etherscan.io/address/0xf5d27939d55b3dd006505c2fa37737b09ebacd71#code
-  let ops =
+  let ops' =
       (compile calldatasize)
       ++ [ POP ]
 
-  let ops' =
+  let ops'' =
          (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee )
-      ++ (compile $ log0 0x00 32 )
-      ++ (compile $ return 0x00 32 )
+      ++ (compile $ log0 0x00 32)
+      ++ (compile $ return 0x00 32)
+
+  -- works call ourselves...
+  let ops =
+       [ PUSH1 0xff, POP ]
+       ++ (compile $ call gas address 0x0 0x0 0x0 0x0 0x0 )
 
 
-  -- we really do want to use a callcode. To hit the constructor...
+  -- ok, so we can pass values in - and return values out - and can log.
+  -- what we want to do now... have a code/function that calls another another contract...
+  -- but not sure to do this cannot deploy more than one contract ...
+
+  -- we might be able to test using ethrun. and then call the same contract.
+
+  -- we really do want to use a call . To hit the constructor...
   -- actually next thing we want is access to the damn calldata.
+
+  -- we can try calling our own 
 
   -- maybe add loader code...
   let all = the (List OpCode) $ 
@@ -526,7 +537,6 @@ main = do
 
         False => ops 
 
-           
 
 
   let hops = map human all
