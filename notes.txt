@@ -1,4 +1,48 @@
 
+OK - I think call data. should specify where to copy the values back?
+
+opcodes...
+  
+
+calldataload - is an accessor function... to access arguments passed.
+
+-------
+SO THIS explains HOW ITS POSSIBLE TO DO A SINGLE RETURN TO DEPLOY THE CONTRACT WITH ALL METHODS.
+
+----------
+so I think that we need to try to use LOG to check if our code does anything when called...
+or increment a value...
+  hevm doesn't support calling again with the contract deployed
+
+
+---------
+-- solidity dispatches - or the evm dispatches - i think solidity builds the table.. 
+-- so that explains how it works.
+
+method_id = first 4 bytes of msg.data
+if method_id == 0x25d8dcf2 jump to 0x11
+if method_id == 0xaabbccdd jump to 0x22
+if method_id == 0xffaaccee jump to 0x33
+other code <- Solidity fallback function code could be here
+0x11:
+code for function with method id 0x25d8dcf2
+0x22:
+code for another function
+0x33:
+code for another function
+
+
+https://ethereum.stackexchange.com/questions/7602/how-does-the-evm-find-the-entry-of-a-called-function
+
+
+
+
+
+
+
+
+---------------------
+
   -- Add : Expr x -> Expr y -> Expr ( sub1 ( plus  x y))      -- adding should pop2 and add 1 - should be -1 - need to subtrac
   -- Add : Expr x -> Expr y -> Expr ( ( plus1  x y))      -- adding should pop2 and add 1 - should be -1 - need to subtrac
                                                   -- this should be a substraction... 

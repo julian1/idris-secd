@@ -1,10 +1,15 @@
 
--- import Debug.Error 
+import Debug.Error 
 import Debug.Trace
 
+
+%language ElabReflection
 -- https://github.com/idris-lang/Idris-dev/tree/master/libs/contrib/Data
 -- https://github.com/idris-lang/Idris-dev/blob/master/libs/prelude/Prelude/Interfaces.idr
 -- https://github.com/idris-lang/Idris-dev/blob/master/libs/base/Debug/Trace.idr
+
+-- this is really good, shows a better debugger also, 
+-- https://github.com/CoinCulture/evm-tools/blob/master/analysis/guide.md
 
 -- same as lambda but without comments...
 
@@ -14,6 +19,7 @@ data Expr : Type where
   Number : Integer -> Expr        -- eg. pushing on stack is one gas.
 
   Add : Expr -> Expr  -> Expr
+  Sub : Expr -> Expr  -> Expr
 
   If : Expr -> Expr  -> Expr -> Expr
 
@@ -75,6 +81,7 @@ Num Expr where
     address nameReg = 0x72ba7d8e73fe8eb666ea66babc8116a41bfb10e2;
     nameReg.call("register", "MyName");
     nameReg.call(bytes4(keccak256("fun(uint256)")), a);
+        - can't interpret the return results...
 
   or web3,
     var contract = web3.eth.contract(contractABI).at(contractAddress);
@@ -92,7 +99,29 @@ Num Expr where
         , calldatasize //mem_insz
         , o_code //reuse mem
         , 32) //Hardcoded to 32 b return value
-        
+    -----------------    
+
+  OK - VERY IMPORTANT.
+
+  calldata is the calldata environment in the method. it's not a separate transaction to load...
+ 
+  SO. am not sure it even works... 
+  ---
+
+  so it doesn't use memory - for context boundaries.. 
+  instead it uses calldata 
+
+  $ evm --debug --code 60003560203501 --input 00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000004
+VM STAT 6 OPs
+
+  eg. add the values 4 and 5
+  hevm exec --code 60003560203501  --calldata 00000000000000000000000000000000000000000000000000000000000000050000000000000000000000000000000000000000000000000000000000000004   --gas 1000 --debug
+
+  CALLDATASIZE  - tells us the total data size. eg. 2x32 for the two args.
+                - but we can play tricks.
+  
+  EG. we use div to right pad everywhere,
+
 
 -}
 
@@ -124,8 +153,8 @@ bytes x =
 
 
 lpad : Nat -> a -> List a -> List a 
-lpad l x xs = 
-  replicate (l `minus` length xs) x  ++ xs
+lpad n x xs = 
+  replicate (n `minus` length xs) x  ++ xs
 
 
 
@@ -148,6 +177,7 @@ showHex w x =
 
 data OpCode : Type where
   ADD     : OpCode
+  SUB     : OpCode
   ISZERO  : OpCode
 
   -- need to add operand...
@@ -198,6 +228,8 @@ length' xs =
 human : OpCode -> String
 human expr = case expr of
   ADD     => "add"
+  SUB     => "sub"
+
   ISZERO  => "not"
 
   PUSH1  val => "push1 0x" ++ showHex 1 val
@@ -234,6 +266,8 @@ human expr = case expr of
 machine : OpCode -> String
 machine expr = case expr of
   ADD     => "01"
+  SUB     => "03"
+
   ISZERO  => "15"
 
   -- I think all of the formatting is a bit off...
@@ -289,6 +323,12 @@ compile expr = case expr of
     compile lhs
     ++ compile rhs
     ++ [ ADD ] --  are we doing this around the right way
+
+  Sub lhs rhs =>
+    compile lhs
+    ++ compile rhs
+    ++ [ SUB ] --  are we doing this around the right way
+ 
   
   -- relative jump labeling
   -- none of this list concat is efficient. probably should use join/flatten 
@@ -358,6 +398,9 @@ call = Call
 
 mstore : Expr -> Expr -> Expr 
 mstore = MStore
+
+minus : Expr -> Expr -> Expr 
+minus = Sub
 
 mload : Expr -> Expr 
 mload = MLoad
@@ -450,12 +493,17 @@ The argument of PUSH1 is also separated by white space
 
 -}
 
-main' : IO ()
-main' = do
+
+main : IO ()
+main = do
 
   -- let ops = compile $ myfunc3 Arg1 
   -- let ops = compile $ myfunc0
-  let ops = compile $ mstore 0x60 0x40 
+  -- https://ropsten.etherscan.io/address/0xf5d27939d55b3dd006505c2fa37737b09ebacd71#code
+  let ops = 
+      (compile $ mstore 0x00 0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff) 
+      ++ [ PUSH1 0x0, PUSH1 32, RETURN ] 
+    
 
   let len = length'  ops 
   printLn len
@@ -486,33 +534,53 @@ main' = do
 
 
 -- Ahhhh will might struggle to push a large integer? 
-
 -- OK. manipulating this thing as a string of bytes is going to be royal pain... 
 
-main : IO ()
-main = do
+myerror : Void
+myerror = error "whoot"
 
-  -- address value is truncated....
+main' : IO ()
+main' = do
 
-  -- to call simple code or method, we just need to do a send transaction with data.
-  -- Ok, we have a problem with interpreting an integer
-  -- address is 20 bytes...
-
-  -- actually we should just push the current amount of gas...
-  -- we want a gas opCode...
-
-  -- idris_crash "whhott"
-
-  --call(g, a, v, in, insize, out, outsize)    
+  -- call(g, a, v, in, insize, out, outsize)    
   -- let ops = compile $ call gas 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0 
 
   -- ok. problem. is that the memory is not an expressoin input. 
+
+  -- it might be that we need a single argument for the call method...
+  -- but we should still be able to get into that space
+
+  -- THIS IS NOT CALLDATA!!!!!
+  -- NOT TO BE USED WITH hevm or with ethrun
+
+  -- There is thus also a new RETURN opcode which allows contract execution to return data.
+  -- So what is used? the fucking outdata or return or the stack ?
+  
+  {-
+    https://ethereum.stackexchange.com/questions/8044/what-are-the-two-arguments-to-a-return-opcode
+
+    The 2 arguments to the RETURN opcode are offsets into memory: the starting and ending offset.
+    The EVM execution is stopped and data consisting of the memory bytes from [start, end-1] are the output of the execution.
+    Example:
+
+    If memory is [5, 6, 7, 8, 9, 10], a return with offsets 1, 4 would produce a result (output) of 3 bytes (6, 7, 8).
+  -}
+
+
+  printLn "before error"
+  let x = the Void $ error "whoot"
+  let x' = the Integer $ idris_crash "whoot"
+  printLn "after error"
   
   -- 40 should be the a 
   let ops = 
 --       (compile $ mstore 0x60 0x40 )  -- eg. 60 into 40
 --    ++ (compile $ mload 0x40 )        -- test load at 40 
-    [] ++ (compile $ call gas address 0x0 0x0 0x0 0x40 0x01)
+--    [] ++ (compile $ call gas address 0 0x0 0x0 0x0 32)
+      (compile $ minus 4 3 ) 
+
+-- what is the relationship...
+-- calldataload 
 
   let hops = map human ops
   printLn hops
