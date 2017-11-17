@@ -495,52 +495,38 @@ main = do
   let ops =
       (compile calldatasize)
       ++ [ POP ]
-      ++ (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee )
+
+  let ops' =
+         (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee )
       ++ (compile $ log0 0x00 32 )
       ++ (compile $ return 0x00 32 )
+
 
   -- we really do want to use a callcode. To hit the constructor...
   -- actually next thing we want is access to the damn calldata.
 
-  let x = False
+  -- maybe add loader code...
+  let all = the (List OpCode) $ 
+     case False of 
+        True => 
+          let len = length' ops in
 
+          -- this works without var setup.
+          let loader = the (List OpCode) [
+                PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+                ];
+          in
 
-  -- OK I think we want to optionally 
-  -- what the fuck is wrong with this???
-  let all' = the (List OpCode) $ case x of 
-              True => [ POP ]
-              False => [ POP ]
+          -- this works - as solidity like setup.
+          let loader' = the (List OpCode) [
+                PUSH1 0x60, PUSH1 0x40, MSTORE,
+                PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+                ];
+          in loader ++ ops
+
+        False => ops 
 
            
-
-  let all  =  [ POP ] 
- 
-{-
-  case p x of
-    True => x
-    False => trace message x
-
-
-  let all = case True of
-              True => [] 
-
-                let len = length' ops in
-
-                -- this works without var setup.
-                let loader = the (List OpCode) [
-                      PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
-                      ];
-                in
-
-                -- this works - as solidity like setup.
-                let loader' = the (List OpCode) [
-                      PUSH1 0x60, PUSH1 0x40, MSTORE,
-                      PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN
-                      ];
-                in loader ++ ops
-
-              False =>  ops
- -}          
 
 
   let hops = map human all
