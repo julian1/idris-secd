@@ -472,8 +472,10 @@ main = do
       (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee ) 
       ++ (compile $ log0 0x00 32 )
       ++ (compile $ return 0x00 32 )
-      -- ++ [ PUSH1 0x0, PUSH1 32, RETURN ] 
-   
+  
+  -- we really do want to use a callcode. To hit the constructor...
+  -- actually next thing we want is access to the damn calldata.
+ 
   -- should the return be reversed ... 
 
   let len = length'  ops 
