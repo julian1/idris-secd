@@ -66,6 +66,8 @@ data Expr : Type where
   -- monadic - not a pure expression
   -- call(g, a, v, in, insize, out, outsize)
   Call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr
+  Create : Expr -> Expr -> Expr -> Expr
+
   Gas : Expr
   Address : Expr
   Balance : Expr -> Expr
@@ -173,6 +175,7 @@ data OpCode : Type where
 
   CODECOPY : OpCode
   CALL     : OpCode
+  CREATE   : OpCode
 
   GAS      : OpCode
   ADDRESS  : OpCode
@@ -229,6 +232,8 @@ human expr = case expr of
 
   CODECOPY => "codecopy"
   CALL    => "call"
+  CREATE  => "create"
+
   GAS     => "gas"
   ADDRESS => "address"
   BALANCE => "balance"
@@ -273,6 +278,8 @@ machine expr = case expr of
 
   CODECOPY => "39"
   CALL    => "f1"
+  CREATE  => "f0"
+
   GAS     => "5a"
   ADDRESS => "30"
   BALANCE => "31"
@@ -309,6 +316,7 @@ compile expr = case expr of
   Mul a b => compile b ++ compile a ++ [ MUL ]
 
   -- relative jump labeling
+  -- need more than one byte... and proof about len offset
   -- none of this list concat is efficient. probably should use join/flatten
   If pred a b =>
     let p = compile pred
@@ -339,8 +347,14 @@ compile expr = case expr of
         out' = compile out
         outsize' = compile outsize
     in
-    -- g' ++ a' ++ v' ++ in_' ++ insize' ++ out' ++ outsize' ++ [ CALL ]
     outsize' ++ out' ++ insize' ++ in_' ++  v' ++ a'  ++ g' ++ [ CALL ]
+
+  -- 
+  -- create(v, p, s)       create new contract with code mem[p..(p+s)) and send v wei and return the new address
+  Create v addr s => compile s ++ compile addr ++ compile v ++ [ CREATE ]
+
+  -- IMPORTANT - codecopy can be used in place of [ push, mstore ] for large literals, not just code
+  -- val is confusing with v for value.
 
   Gas => [ GAS ]
   Address => [ ADDRESS ]
@@ -385,11 +399,22 @@ Num Expr where
     (*) = Mul
     fromInteger n = Number n
 
+
+add: Expr -> Expr -> Expr 
+add = Add 
+
+sub: Expr -> Expr -> Expr 
+sub = Add 
+
 ifelse: Expr -> Expr -> Expr -> Expr
 ifelse = If
 
 call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr
 call = Call
+
+create: Expr -> Expr -> Expr -> Expr 
+create = Create
+
 
 mstore : Expr -> Expr -> Expr
 mstore = MStore
@@ -554,23 +579,60 @@ main = do
       ++ (compile $ call gas address 0x0 0x5 32 0x0 0x0 ) -- call passing the data
 
   -- works - sends 1 eth to address 0x, use hevm with --value flag.
-  let ops =
+  let ops''''' =
       (compile $ balance address ) ++ [ POP ]        -- show eth amount
       ++ (compile $ call gas 0x0 1 0x0 0x0 0x0 0x0 ) -- send 1 eth to 0x000000 
       ++ (compile $ balance address ) ++ [ POP ]     -- show eth amount
       ++ [ STOP ]
 
 
+  -- it's a bit of a tangle
+
+{-
+
+ 776         0xf0 -> do
+ 777           case stk of
+ 778             (xValue:xOffset:xSize:xs) ->
+ 779               burn g_create $ do
+
+
+ 827         -- op: CALL
+ 828         0xf1 ->
+ 829           case stk of
+ 830             ( xGas
+ 831               : (num -> xTo)
+ 832               : xValue
+ 833               : xInOffset
+ 834               : xInSize
+ 835               : xOutOffset
+ 836               : xOutSize
+ 837               : xs
+ 838              ) -> do
+-}
+
+
+  let all =
+          (compile $ create 0 21 5 )                        -- create contract value 0, address 21, len 3.  we can use STOP for nops...
+       ++ (compile $ call gas 0x1   0x0 0x0 0x0 0x0 0x0 )   -- call contract 
+       ++ [ STOP ]
+       ++ (compile $ add 3 4) 
+
+  -- when we do a create call, hevm changes context and gives us a screen of stop
+  -- and returns value 0x01 which seems wrong.
+
+
+  -- ok... we just want to wrap it up...
 
   -- note that we haven't actually pulled the data that we send off...
   -- passing arguments...
 
+{-
   -- should be a separate function ...
   let all = the (List OpCode) $
      case False of
         True => addLoader ops
         False => ops
-
+-}
 
   let hops = map human all
   printLn hops
