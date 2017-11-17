@@ -61,6 +61,8 @@ data Expr : Type where
 
   hevm exec --code 606060405260298060106000396000f37f0000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF60005260206000f3 --calldata 00  --gas 1000
 
+  also works when send transaction.
+
 -}
 
 
@@ -157,12 +159,13 @@ length' : List OpCode -> Integer
 length' xs = 
   -- needs to be left to right
   foldr (\expr, acc => acc + f expr) 0 xs
-    where f expr = case expr of
-            PUSH1  _ => 1 + 1
-            PUSH2  _ => 1 + 2
-            PUSH20 _ => 1 + 20
-            PUSH32 _ => 1 + 32 
-            _ => 1
+    where 
+    f expr = case expr of
+      PUSH1  _ => 1 + 1
+      PUSH2  _ => 1 + 2
+      PUSH20 _ => 1 + 20
+      PUSH32 _ => 1 + 32 
+      _ => 1
 
 
 human : OpCode -> String
