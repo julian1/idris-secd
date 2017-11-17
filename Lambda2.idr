@@ -57,6 +57,7 @@ data Expr : Type where
   Call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr
   Gas : Expr
   Address : Expr
+  Balance : Expr -> Expr
   MStore : Expr -> Expr -> Expr
   MLoad : Expr -> Expr
   Return : Expr -> Expr -> Expr
@@ -164,7 +165,7 @@ data OpCode : Type where
 
   GAS      : OpCode
   ADDRESS  : OpCode
---  BALANCE   : OpCode
+  BALANCE   : OpCode
 
   -- allow injecting raw data
   DATA : Bits8 -> OpCode
@@ -219,6 +220,7 @@ human expr = case expr of
   CALL    => "call"
   GAS     => "gas"
   ADDRESS => "address"
+  BALANCE => "balance"
 
   DATA bits8 => "0x" ++ b8ToHexString bits8
 
@@ -262,9 +264,10 @@ machine expr = case expr of
   CALL    => "f1"
   GAS     => "5a"
   ADDRESS => "30"
+  BALANCE => "31"
 
   -- TODO change name DATA to DATA?
-  -- or DATA8 or BYTE8 ? 
+  -- or DATA8 or BYTE8 ?
   DATA bits8 => b8ToHexString bits8
 
 
@@ -330,6 +333,7 @@ compile expr = case expr of
 
   Gas => [ GAS ]
   Address => [ ADDRESS ]
+  Balance addr => compile addr ++ [ BALANCE ]
 
   -- mstore(addr, v)
   MStore addr val => compile val ++ compile addr ++ [ MSTORE ]
@@ -382,7 +386,7 @@ mstore = MStore
 return : Expr -> Expr -> Expr
 return = Return
 
-calldatasize : Expr 
+calldatasize : Expr
 calldatasize = CallDataSize
 
 log0 : Expr -> Expr -> Expr
@@ -399,6 +403,11 @@ gas = Gas
 
 address : Expr
 address = Address
+
+balance : Expr -> Expr
+balance = Balance
+
+
 
 -- http://docs.idris-lang.org/en/latest/tutorial/syntax.html
 syntax "if" [test] "then" [t] "else" [e] = If test t e;
@@ -523,6 +532,7 @@ main = do
   -- call(g, a, v, in, insize, out, outsize)
   let ops =
       (compile calldatasize) ++ [ POP ] -- report how much data was passed..
+      ++ (compile $ balance address ) ++ [ POP ] -- report how much data was passed..
       ++ (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee ) -- push some extra data...
       ++ (compile $ call gas address 0x0 0x0 32 0x0 0x0 ) -- call with the data
 
@@ -531,10 +541,10 @@ main = do
   -- passing arguments...
 
   -- should be a separate function ...
-  let all = the (List OpCode) $ 
-     case False of 
-        True => addLoader ops 
-        False => ops 
+  let all = the (List OpCode) $
+     case False of
+        True => addLoader ops
+        False => ops
 
 
   let hops = map human all
@@ -546,7 +556,7 @@ main = do
 
 
 {-
-  -- QUESTION - can we arbitrarily manipulate the 0x40 0x60 stack pointer? when calling? 
+  -- QUESTION - can we arbitrarily manipulate the 0x40 0x60 stack pointer? when calling?
   -- eg. to change data, or short circuit?
 
   -- so lets try to push a value
@@ -554,9 +564,9 @@ TODO
   send bloody eth... to another address or contract.
   figure out how to call a contract with stack in a certain state etc..
 
-  done - ok, so we can pass values in 
+  done - ok, so we can pass values in
   done - and return values out - and can log.
-  
+
   done - figured out ethrun and hevm usage
 
   - implement a sequencing operation...
@@ -568,7 +578,7 @@ TODO
   -- we really do want to use a call . To hit the constructor...
   -- actually next thing we want is access to the damn calldata.
 
-  -- we can try calling our own 
+  -- we can try calling our own
 -}
 
  ------------------------
