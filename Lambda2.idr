@@ -482,19 +482,18 @@ The argument of PUSH1 is also separated by white space
 
 addLoader : List OpCode -> List OpCode
 addLoader ops =
-
-          let len = length' ops in
-          -- simple
-          let loader = the (List OpCode) [
-                PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
-                ];
-          in
-          -- like solidity
-          let loader' = the (List OpCode) [
-                PUSH1 0x60, PUSH1 0x40, MSTORE,
-                PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN
-                ];
-          in loader ++ ops
+  let len = length' ops in
+  -- simple
+  let loader = the (List OpCode) [
+    PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+    ];
+  in
+  -- like solidity
+  let loader' = the (List OpCode) [
+    PUSH1 0x60, PUSH1 0x40, MSTORE,
+    PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+    ];
+  in loader ++ ops
 
 
 
@@ -508,6 +507,7 @@ main = do
   let ops' =
       (compile calldatasize) ++ [ POP ]
 
+  -- push a value, log it, and return it
   let ops'' =
          (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee )
       ++ (compile $ log0 0x00 32)
@@ -516,34 +516,19 @@ main = do
   -- works call ourselves...
   -- how much data...
   let ops''' =
-      (compile calldatasize) ++ [ POP ] -- report how much data was passed..
+      [ PUSH1 0xff, POP ]
+       ++ (compile $ call gas address 0x0 0x0 0x0 0x0 0x0 ) -- call ourselves recursively...
 
-       ++ (compile $ call gas address 0x0 0x0 0x0 0x0 0x0 )
-
+  -- works - call contract with some data
+  -- call(g, a, v, in, insize, out, outsize)
   let ops =
       (compile calldatasize) ++ [ POP ] -- report how much data was passed..
-
       ++ (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee ) -- push some extra data...
-
-      ++ (compile $ call gas address 0x0 0x0 0x0 0x0 0x0 )
-
+      ++ (compile $ call gas address 0x0 0x0 32 0x0 0x0 ) -- call with the data
 
 
-  -- QUESTION - can we arbitrarily manipulate the 0x40 0x60 stack pointer? when calling? 
-  -- to make 
-
-  -- so lets try to push a value
-
-  -- ok, so we can pass values in - and return values out - and can log.
-  -- what we want to do now... have a code/function that calls another another contract...
-  -- but not sure to do this cannot deploy more than one contract ...
-
-  -- we might be able to test using ethrun. and then call the same contract.
-
-  -- we really do want to use a call . To hit the constructor...
-  -- actually next thing we want is access to the damn calldata.
-
-  -- we can try calling our own 
+  -- note that we haven't actually pulled the data that we send off...
+  -- passing arguments...
 
   -- should be a separate function ...
   let all = the (List OpCode) $ 
@@ -560,67 +545,31 @@ main = do
 
 
 
--- Ahhhh will might struggle to push a large integer?
--- OK. manipulating this thing as a string of bytes is going to be royal pain...
+{-
+  -- QUESTION - can we arbitrarily manipulate the 0x40 0x60 stack pointer? when calling? 
+  -- eg. to change data, or short circuit?
 
-myerror : Void
-myerror = error "whoot"
+  -- so lets try to push a value
+TODO
+  send bloody eth... to another address or contract.
+  figure out how to call a contract with stack in a certain state etc..
 
-main' : IO ()
-main' = do
+  done - ok, so we can pass values in 
+  done - and return values out - and can log.
+  
+  done - figured out ethrun and hevm usage
 
-  -- call(g, a, v, in, insize, out, outsize)
-  -- let ops = compile $ call gas 0xaebc05cb911a4ec6f541c3590deebab8fca797fb 0x0 0x0 0x0 0x0 0x0
+  - implement a sequencing operation...
+      even if not monadic...
 
-  -- ok. problem. is that the memory is not an expressoin input.
+  -- what we want to do now... have a code/function that calls another another contract...
+  -- but not sure to do this cannot deploy more than one contract ...
 
-  -- it might be that we need a single argument for the call method...
-  -- but we should still be able to get into that space
+  -- we really do want to use a call . To hit the constructor...
+  -- actually next thing we want is access to the damn calldata.
 
-  -- THIS IS NOT CALLDATA!!!!!
-  -- NOT TO BE USED WITH hevm or with ethrun
-
-  -- There is thus also a new RETURN opcode which allows contract execution to return data.
-  -- So what is used? the fucking outdata or return or the stack ?
-
-  {-
-    https://ethereum.stackexchange.com/questions/8044/what-are-the-two-arguments-to-a-return-opcode
-
-    The 2 arguments to the RETURN opcode are offsets into memory: the starting and ending offset.
-    The EVM execution is stopped and data consisting of the memory bytes from [start, end-1] are the output of the execution.
-    Example:
-
-    If memory is [5, 6, 7, 8, 9, 10], a return with offsets 1, 4 would produce a result (output) of 3 bytes (6, 7, 8).
-  -}
-
-  -- so what do we want to do here...
-  -- lets check the sub works...
-
-  printLn "before error"
-  let x = the Void $ error "whoot"
-  let x' = the Integer $ idris_crash "whoot"
-  printLn "after error"
-
-  -- 40 should be the a
-  let ops =
---       (compile $ mstore 0x60 0x40 )  -- eg. 60 into 40
---    ++ (compile $ mload 0x40 )        -- test load at 40
---    [] ++ (compile $ call gas address 0 0x0 0x0 0x0 32)
-      (compile $ minus 4 3 )
-
--- what is the relationship...
--- calldataload
-
-  let hops = map human ops
-  printLn hops
-
-  let mops = foldl (++) "" $ map machine ops
-  printLn mops
-
-
-
-
-
+  -- we can try calling our own 
+-}
 
  ------------------------
   -- OK
