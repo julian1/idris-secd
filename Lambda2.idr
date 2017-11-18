@@ -1,3 +1,18 @@
+
+{-
+    - OK the actual Interpreter uses a full lambda calculus. 
+    eg. the add operation is \x y. x + y 
+    where there are two lambda functions.
+
+    - now if we did do something like that. 
+
+    - it looks complicated - BUT. maybe it would be a way to properly handle the stack.
+      or handle stack or memory.
+    - and allows partial application.
+
+    - it should simplify - because each application is just a stack push
+-}
+
 {-
   TODO - write the output to a file... then can load it in hevm in simple bash script.
   
@@ -281,6 +296,7 @@ machine expr = case expr of
 
   POP       => "50"
 
+  -- need to constrain...
   DUP val   => showHex 1 $ 0x7f + val
   SWAP val  => showHex 1 $ 0x8f + val
 
@@ -760,6 +776,21 @@ main = do
        ++ (compile $ loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
   -}
 
+  -- the stack considered as one thing - is an implied variable being passed...
+  
+  -- one monadic context, might be to compile. another context... to test? another to check stuff.
+  -- but we still have an issue of labels...
+  
+  -- actually not sure how do could work - if it's supposed to take functions
+  -- unless we can use the dsl syntax extensions... for our lambdas.
+
+  -- so we can do labels (label 123, labelref 123) ... but what about code size and offsets?
+  -- HMMMMMMMM - BUT - we can compile/deploy dynamically. so why not make it homomorphic
+
+  -- WHAT we need to do is to return the location and the size...
+
+  -- eg. instantiate something -> loc, size  - on the stack.... no.
+
   let all =
       compile $
         codecopy 0 30 16                                    -- copy contract code to memory 0, code pos 30, len 16
@@ -768,7 +799,12 @@ main = do
         >>= ops [ POP, POP, STOP ] 
         >>= (loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
 
-
+  {-
+  -- actually do seems to expect a proper monadic type... m b
+  let all' = do
+        (codecopy 0 30 16)
+        ( create 0 0 16)
+  -}
 
   -- make the loader a first class compile primitive.
 
