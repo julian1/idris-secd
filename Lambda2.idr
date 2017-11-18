@@ -131,6 +131,8 @@ data Expr : Type where
   Return : Expr -> Expr -> Expr
   CallDataSize : Expr
 
+  Loader : Expr -> Expr -- it's a primitive
+
   Ops : List OpCode -> Expr
 
   -- log0(p, s)  -   log without topics and data mem[p..(p+s))
@@ -309,6 +311,15 @@ machine expr = case expr of
 -- let v = fromInteger val in
 -- the formatting must spit out the correct number of bytes...
 
+
+simpleLoader : Integer -> List OpCode
+simpleLoader len = 
+  the (List OpCode) [
+    PUSH1 len, DUP 1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+  ];
+
+
+
 compile : Expr -> List OpCode
 compile expr = case expr of
 
@@ -396,6 +407,11 @@ compile expr = case expr of
   Log0 addr val  => compile val ++ compile addr ++ [ LOG0 ]
 
 
+  Loader expr =>
+      let ops = compile expr in 
+      let len = length' ops in
+      simpleLoader len ++ ops
+
 
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
@@ -476,6 +492,9 @@ address = Address
 
 balance : Expr -> Expr
 balance = Balance
+
+loader : Expr -> Expr 
+loader = Loader
 
 
 
@@ -577,12 +596,6 @@ addLoader ops =
 
 -- Is this is part of a compilation...
 -- or an actual function
-
-simpleLoader : Integer -> List OpCode
-simpleLoader len = 
-  the (List OpCode) [
-    PUSH1 len, DUP 1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
-  ];
 
 -- its a function... with an argument...
 
@@ -717,8 +730,11 @@ main = do
        ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 16
        ++ (compile $ call gas (ops [ DUP 6 ]) 0  0x0 0x0 0x0 0x0 )   -- call contract, swapping in address
        ++ [ POP, POP, STOP ]                               -- padding
-       ++ simpleLoader 5                                     -- contract loading 
-       ++ (compile $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
+       -- ++ simpleLoader 5                                     -- contract loading 
+       ++ (compile $ loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
+
+
+  -- make the loader a first class compile primitive.
 
   -- simpleLoader is a compilation step.
   -- swap 5 is a lambda argument consumption.
