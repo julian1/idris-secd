@@ -155,14 +155,15 @@ data OpCode : Type where
 
   ISZERO  : OpCode
 
-  -- need to add operand...
+  -- use integer for width ? to add operand...
   PUSH1   : Integer -> OpCode
   PUSH2   : Integer -> OpCode
   PUSH20  : Integer -> OpCode
   PUSH32  : Integer -> OpCode
 
+
   POP     : OpCode
-  DUP1    : OpCode
+  DUP     : Integer -> OpCode
 
   MSTORE  : OpCode
   MLOAD   : OpCode
@@ -220,7 +221,7 @@ human expr = case expr of
   PUSH32 val => "push32 0x" ++ showHex 32 val
 
   POP     => "pop"
-  DUP1    => "dup1"
+  DUP val => "dup" ++ show val -- needs to be tightened
 
   MSTORE  => "mstore"
   MLOAD   => "mload"
@@ -266,7 +267,7 @@ machine expr = case expr of
   PUSH32 val => "7f" ++ showHex 32 val
 
   POP     => "50"
-  DUP1    => "80"
+  DUP val => showHex 1 $ 0x80 + val -1
 
   MSTORE  => "52"
   MLOAD   => "51"
@@ -543,13 +544,13 @@ addLoader ops =
   let len = length' ops in
   -- simple
   let loader = the (List OpCode) [
-    PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+    PUSH1 len, DUP 1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
     ];
   in
   -- like solidity
   let loader' = the (List OpCode) [
     PUSH1 0x60, PUSH1 0x40, MSTORE,
-    PUSH1 len, DUP1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+    PUSH1 len, DUP 1, PUSH1 0x10, PUSH1 0, CODECOPY, PUSH1 0, RETURN
     ];
   in loader ++ ops
 
@@ -557,7 +558,7 @@ addLoader ops =
 simpleLoader : Integer -> List OpCode
 simpleLoader len = 
   the (List OpCode) [
-    PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+    PUSH1 len, DUP 1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
   ];
 
 
@@ -619,9 +620,50 @@ main = do
 
   -- that is why we end up stepping into the create
 
-  let all =
-          (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 5
-       ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 5
+  -- think we want to prove that the create works...
+  -- if we use append and then a single compile. then we can insert position labels.
+  -- and resolve it all ... after the fact... 
+
+  -- OR.  we have PC so we can use relative...
+  -- we have to - have both size and offset however - for memory operations...
+
+  -- just a super-simple 
+  -- we need to push and pop label values.... so I think that means it is higher than raw assembly... 
+  
+  -- having a kind of bind operator... 
+  -- address and offset... is a property of the code....   It could just 
+  -- we have a contract address..
+  
+  -- it could just be a final assembler pass?
+  -- variable locations in mem. label locations in code.
+  -- (label 'x')
+  -- we could also introduce something in the assembly that just gets removed...
+  -- eg. assembly is either an opcode. or a label.
+  -- a label doesn't contribute to len ...
+
+  -- TWO things - offset. and address..
+  -- for an expression - we can calculate code, and know offset.
+  -- don't think we can just embed a swap - actually we can.
+
+  -- we have the contract creation address - as
+  -- we leave the returned address from create on the stack. and then swap/dup it in. 
+  -- or we use memory.
+  -- actually we would just dup it in...
+
+  -- which way does the stack count. if we can just do dup1 to get the top of stack then getting the address
+  -- is easy...
+  -- actually issue is we need to embed it in expression syntax... 
+  -- top of stack is last pushed value
+{-
+    actually i think it's where we need the concept of a lambda ...
+      what's happening behind the scenes is stack manipulation...
+ 
+    a <- create ... 
+    x <- call gas a v ...
+-}
+  let all' =
+          (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 16
+       ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 16
        ++ [ POP ]                                           -- should be the address of the created contract
        ++ (compile $ call gas 0x1  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
                                                             -- ok this all looks reasonable - and we get a contract return address...
@@ -629,6 +671,15 @@ main = do
        ++ [ STOP ]
        ++ simpleLoader 5 
        ++ (compile $ add 3 4)                               -- simple contract to add two numbers - offset is 30 
+
+  let all = [ PUSH1 0x01, PUSH1 0x02, PUSH1 0x3, DUP 3 ] 
+
+  let hops = map human all
+  printLn hops
+
+  let mops = foldl (++) "" $ map machine all
+  putStrLn mops
+
 
   -- when we do a create call, hevm changes context and gives us a screen of stop
   -- and returns value 0x01 which seems wrong.
@@ -646,13 +697,6 @@ main = do
         True => addLoader ops
         False => ops
 -}
-
-  let hops = map human all
-  printLn hops
-
-  let mops = foldl (++) "" $ map machine all
-  putStrLn mops
-
 
 
 {-
