@@ -52,6 +52,56 @@ import Debug.Trace
 -- same as lambda but without comments...
 
 
+
+
+
+
+data OpCode : Type where
+  ADD     : OpCode
+  MUL     : OpCode
+  SUB     : OpCode
+
+  ISZERO  : OpCode
+
+  -- use integer for width ? to add operand...
+  PUSH1   : Integer -> OpCode
+  PUSH2   : Integer -> OpCode
+  PUSH20  : Integer -> OpCode
+  PUSH32  : Integer -> OpCode
+
+
+  POP     : OpCode
+  DUP     : Integer -> OpCode
+  SWAP    : Integer -> OpCode
+
+  MSTORE  : OpCode
+  MLOAD   : OpCode
+
+  JUMP    : OpCode
+  JUMPI   : OpCode
+  PC      : OpCode
+  JUMPDEST : OpCode
+  RETURN  : OpCode
+  CALLDATASIZE : OpCode
+
+  LOG0    : OpCode
+
+  STOP    : OpCode    -- halts execution
+
+  CALL     : OpCode
+  CREATE   : OpCode
+  CODECOPY : OpCode
+
+  GAS      : OpCode
+  ADDRESS  : OpCode
+  BALANCE   : OpCode
+
+  -- allow injecting raw data
+  DATA : Bits8 -> OpCode
+
+
+
+
 data Expr : Type where
 
   Number : Integer -> Expr        -- eg. pushing on stack is one gas.
@@ -80,6 +130,8 @@ data Expr : Type where
   MLoad : Expr -> Expr
   Return : Expr -> Expr -> Expr
   CallDataSize : Expr
+
+  Ops : List OpCode -> Expr
 
   -- log0(p, s)  -   log without topics and data mem[p..(p+s))
   Log0 : Expr -> Expr -> Expr
@@ -144,52 +196,6 @@ showHex w x =
 
 
 
-
-
-
-
-data OpCode : Type where
-  ADD     : OpCode
-  MUL     : OpCode
-  SUB     : OpCode
-
-  ISZERO  : OpCode
-
-  -- use integer for width ? to add operand...
-  PUSH1   : Integer -> OpCode
-  PUSH2   : Integer -> OpCode
-  PUSH20  : Integer -> OpCode
-  PUSH32  : Integer -> OpCode
-
-
-  POP     : OpCode
-  DUP     : Integer -> OpCode
-  SWAP    : Integer -> OpCode
-
-  MSTORE  : OpCode
-  MLOAD   : OpCode
-
-  JUMP    : OpCode
-  JUMPI   : OpCode
-  PC      : OpCode
-  JUMPDEST : OpCode
-  RETURN  : OpCode
-  CALLDATASIZE : OpCode
-
-  LOG0    : OpCode
-
-  STOP    : OpCode    -- halts execution
-
-  CALL     : OpCode
-  CREATE   : OpCode
-  CODECOPY : OpCode
-
-  GAS      : OpCode
-  ADDRESS  : OpCode
-  BALANCE   : OpCode
-
-  -- allow injecting raw data
-  DATA : Bits8 -> OpCode
 
 
 -- a better way to get the length might be to format the opcodes
@@ -369,6 +375,9 @@ compile expr = case expr of
   -- IMPORTANT - codecopy can be used in place of [ push, mstore ] for large literals, not just code
   -- val is confusing with v for value.
 
+  -- raw ops
+  Ops ops => ops
+
   Gas => [ GAS ]
   Address => [ ADDRESS ]
   Balance addr => compile addr ++ [ BALANCE ]
@@ -430,6 +439,13 @@ create = Create
 
 codecopy : Expr -> Expr -> Expr -> Expr 
 codecopy = CodeCopy
+
+
+
+ops : List OpCode -> Expr 
+ops = Ops
+
+
 
 -- IMPORTANT - all the stateful operations - they should be using an append/ monoid. Not embedded in an expression.
 -- particularly when use vars
@@ -667,18 +683,20 @@ main = do
 
     stack,mem,contect  -- all of this is mutated... throught >>=/ bind
 -}
-  let all' =
+  let all =
           (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 16
        ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 16
-       ++ [ POP ]                                           -- should be the address of the created contract
-       ++ (compile $ call gas 0x1  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
+
+       ++ [ POP ]
+       -- ++ (compile $ call gas (Ops [ SWAP 3 ])  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
+       ++ (compile $ call gas 0x01  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
                                                             -- ok this all looks reasonable - and we get a contract return address...
                                                             -- we just have to flip it into the thing we want to call...
        ++ [ STOP ]
        ++ simpleLoader 5 
        ++ (compile $ add 3 4)                               -- simple contract to add two numbers - offset is 30 
 
-  let all = [ PUSH1 0x01, PUSH1 0x02, PUSH1 0x3, SWAP 2, STOP ] 
+  -- let all = [ PUSH1 0x01, PUSH1 0x02, PUSH1 0x3, SWAP 2, STOP ] 
 
   let hops = map human all
   printLn hops
@@ -686,6 +704,12 @@ main = do
   let mops = foldl (++) "" $ map machine all
   putStrLn mops
 
+  ------------------------
+  -- WE NEED TO BE ABLE TO MAKE AN EXPRESSION like  \addr -> call gas addr 0 0x0 0x0 0x0 0x0 
+  ------------------------
+
+  -- we could have a high level thing to embed op-codes...
+  -- YES...
 
   -- when we do a create call, hevm changes context and gives us a screen of stop
   -- and returns value 0x01 which seems wrong.
