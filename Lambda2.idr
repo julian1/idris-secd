@@ -686,15 +686,10 @@ main = do
   let all =
           (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 16
        ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 16
-
-       -- ++ [ POP ]
-       ++ (compile $ call gas (Ops [ SWAP 5 ])  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
-       -- ++ (compile $ call gas 0x01  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
-                                                            -- ok this all looks reasonable - and we get a contract return address...
-                                                            -- we just have to flip it into the thing we want to call...
-       ++ [ STOP, STOP, STOP ]
-       ++ simpleLoader 5 
-       ++ (compile $ add 3 4)                               -- simple contract to add two numbers - offset is 30 
+       ++ (compile $ call gas (ops [ SWAP 5 ])  0 0x0 0x0 0x0 0x0 )   -- call contract, swapping in address
+       ++ [ STOP, STOP, STOP ]                               -- padding
+       ++ simpleLoader 5                                     -- contract loading 
+       ++ (compile $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
 
   -- let all = [ PUSH1 0x01, PUSH1 0x02, PUSH1 0x3, SWAP 2, STOP ] 
 
