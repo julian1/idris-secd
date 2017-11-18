@@ -553,21 +553,35 @@ addLoader ops =
     ];
   in loader ++ ops
 
+
+simpleLoader : Integer -> List OpCode
+simpleLoader len = 
+  the (List OpCode) [
+    PUSH1 len, DUP1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
+  ];
+
+
 {-
-  I can use CODECOPY/RETURN to load a (non-solidity) contract into hevm with the single argument --code flag. To deploy multiple contracts - I am guessing the preferred way is with dynamic stub code that uses CREATE on each contract? 
+  I can use CODECOPY/RETURN to load a (non-solidity) contract into hevm with
+  the single argument --code flag. To deploy multiple contracts - I am guessing
+  the preferred way is with dynamic stub code that uses CREATE on each contract? 
 
   actually we can test this completely...  by doing it on a single contract...
 
+  think the same process works. with 
 -}
 
 
 
 main : IO ()
 main = do
+  -- the freaking offset calculation is a bit complicated...
 
   -- let ops = compile $ myfunc3 Arg1
   -- let ops = compile $ myfunc0
   -- https://ropsten.etherscan.io/address/0xf5d27939d55b3dd006505c2fa37737b09ebacd71#code
+
+  -- see the amount of data we were passed
   let ops' =
       (compile calldatasize) ++ [ POP ]
 
@@ -577,8 +591,7 @@ main = do
       ++ (compile $ log0 0x00 32)
       ++ (compile $ return 0x00 32)
 
-  -- works call ourselves...
-  -- how much data...
+  -- works to call ourselves...
   let ops''' =
       [ PUSH1 0xff, POP ]
        ++ (compile $ call gas address 0x0 0x0 0x0 0x0 0x0 ) -- call ourselves recursively...
@@ -604,12 +617,17 @@ main = do
   -- which will be created on return
   -- that might make things a lot easier.
 
+  -- that is why we end up stepping into the create
+
   let all =
-          (compile $ codecopy 0 30 5 )                      -- copy contract code to memory 0, code pos 30, len 5
-       ++ (compile $ create 0 0 5 )                         -- create contract value 0, mem address 0, len 5
+          (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 5
+       ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 5
        ++ [ POP ]                                           -- should be the address of the created contract
        ++ (compile $ call gas 0x1  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
+                                                            -- ok this all looks reasonable - and we get a contract return address...
+                                                            -- we just have to flip it into the thing we want to call...
        ++ [ STOP ]
+       ++ simpleLoader 5 
        ++ (compile $ add 3 4)                               -- simple contract to add two numbers - offset is 30 
 
   -- when we do a create call, hevm changes context and gives us a screen of stop
