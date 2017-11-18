@@ -750,6 +750,7 @@ main = do
     a single compile.
     stack variable versus mem variable.
 -}
+  {-
   let all_ =
           (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 16
        ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 16
@@ -757,7 +758,7 @@ main = do
        ++ [ POP, POP, STOP ]                               -- padding
        -- ++ simpleLoader 5                                     -- contract loading 
        ++ (compile $ loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
-
+  -}
 
   let all =
       compile $
