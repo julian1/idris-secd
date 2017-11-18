@@ -575,11 +575,16 @@ addLoader ops =
   in loader ++ ops
 
 
+-- Is this is part of a compilation...
+-- or an actual function
+
 simpleLoader : Integer -> List OpCode
 simpleLoader len = 
   the (List OpCode) [
     PUSH1 len, DUP 1, PUSH1 0x0B, PUSH1 0, CODECOPY, PUSH1 0, RETURN
   ];
+
+-- its a function... with an argument...
 
 
 {-
@@ -682,14 +687,59 @@ main = do
     x <- call gas a v ...
 
     stack,mem,contect  -- all of this is mutated... throught >>=/ bind
+
+    treat the VM as a tupple?  not for evaluation . where we have a
+      - memory variables
+      - stack variables , lambdas ?
+
+    i think labels are a useful thing whatever we do...
+    but to use them... we're going to have to have a single compile ...
+
+    uggh we have label as a literal... 
+
+      codecopy 0 label_123 16
+      ...
+      ops [ LABEL 123 ] 
+    
+    thing is that labels are not quit enough - need the size of code as well...
+
+    for any piece of code. we need to know the size.
+
+    VERY IMPORTANT...
+      simpleLoader could take the compiled contract -- as an argument.
+      eg. as an Expr
+      
+    Eg. it should take an expression as arg...
+    
 -}
   let all =
           (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 16
        ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 16
-       ++ (compile $ call gas (ops [ SWAP 5 ])  0 0x0 0x0 0x0 0x0 )   -- call contract, swapping in address
-       ++ [ STOP, STOP, STOP ]                               -- padding
+       ++ (compile $ call gas (ops [ DUP 6 ]) 0  0x0 0x0 0x0 0x0 )   -- call contract, swapping in address
+       ++ [ POP, POP, STOP ]                               -- padding
        ++ simpleLoader 5                                     -- contract loading 
        ++ (compile $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
+
+  -- simpleLoader is a compilation step.
+  -- swap 5 is a lambda argument consumption.
+
+  -- question is - how to bind the expression. 
+  -- just put the arguments in a list... 
+  -- call compile on. if it's a lambda... we just
+  -- lambda arg could be embedded.... in a nested the expression...
+  -- so we have to keep a running understanding of the stack... 
+
+  -- index 1,  index 2
+  -- \arg => expr ( expr arg )   <- bound lambda expression. 
+  -- expr ( expr _ 1)            <- bound lambda expression. 
+
+  --------
+  -- OK. i think what we do when we compile - is just pass down our stack depth in the expression.
+  -- each argument will increase the stack depth...
+  -- if we used a monad then we could increment it - all the way down...
+    -- >>= compile x >>= compile y 
+  -- don't think we can use swap though. we need to use dup. to allow using the same expression more than once. 
+  -------
 
   -- let all = [ PUSH1 0x01, PUSH1 0x02, PUSH1 0x3, SWAP 2, STOP ] 
 
@@ -700,7 +750,7 @@ main = do
   putStrLn mops
 
   ------------------------
-  -- WE NEED TO BE ABLE TO MAKE AN EXPRESSION like  \addr -> call gas addr 0 0x0 0x0 0x0 0x0 
+  -- WE NEED TO EXPRESSIONS like  (\addr -> call gas addr 0 0x0 0x0 0x0 0x0)
   ------------------------
 
   -- we could have a high level thing to embed op-codes...
