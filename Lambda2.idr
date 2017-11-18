@@ -164,6 +164,7 @@ data OpCode : Type where
 
   POP     : OpCode
   DUP     : Integer -> OpCode
+  SWAP    : Integer -> OpCode
 
   MSTORE  : OpCode
   MLOAD   : OpCode
@@ -221,7 +222,8 @@ human expr = case expr of
   PUSH32 val => "push32 0x" ++ showHex 32 val
 
   POP     => "pop"
-  DUP val => "dup" ++ show val -- needs to be tightened
+  DUP val   => "dup" ++ show val -- integneeds to be tightened
+  SWAP val  => "swap" ++ show val -- needs to be tightened
 
   MSTORE  => "mstore"
   MLOAD   => "mload"
@@ -266,8 +268,10 @@ machine expr = case expr of
   PUSH20 val => "73" ++ showHex 20 val
   PUSH32 val => "7f" ++ showHex 32 val
 
-  POP     => "50"
-  DUP val => showHex 1 $ 0x80 + val -1
+  POP       => "50"
+
+  DUP val   => showHex 1 $ 0x7f + val
+  SWAP val  => showHex 1 $ 0x8f + val
 
   MSTORE  => "52"
   MLOAD   => "51"
@@ -660,6 +664,8 @@ main = do
  
     a <- create ... 
     x <- call gas a v ...
+
+    stack,mem,contect  -- all of this is mutated... throught >>=/ bind
 -}
   let all' =
           (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 16
@@ -672,7 +678,7 @@ main = do
        ++ simpleLoader 5 
        ++ (compile $ add 3 4)                               -- simple contract to add two numbers - offset is 30 
 
-  let all = [ PUSH1 0x01, PUSH1 0x02, PUSH1 0x3, DUP 3 ] 
+  let all = [ PUSH1 0x01, PUSH1 0x02, PUSH1 0x3, SWAP 2, STOP ] 
 
   let hops = map human all
   printLn hops
