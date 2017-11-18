@@ -42,6 +42,7 @@ import Debug.Trace
 -- https://github.com/idris-lang/Idris-dev/tree/master/libs/contrib/Data
 -- https://github.com/idris-lang/Idris-dev/blob/master/libs/prelude/Prelude/Interfaces.idr
 -- https://github.com/idris-lang/Idris-dev/blob/master/libs/base/Debug/Trace.idr
+-- https://wiki.dlang.org/Operator_precedence
 
 -- good op-codes - eg. operands
 -- https://github.com/CoinCulture/evm-tools/blob/master/analysis/guide.md
@@ -134,6 +135,8 @@ data Expr : Type where
   Loader : Expr -> Expr -- it's a primitive
 
   Ops : List OpCode -> Expr
+
+  Seq : Expr -> Expr -> Expr
 
   -- log0(p, s)  -   log without topics and data mem[p..(p+s))
   Log0 : Expr -> Expr -> Expr
@@ -389,6 +392,8 @@ compile expr = case expr of
   -- raw ops
   Ops ops => ops
 
+  Seq a b => compile a ++ compile b
+
   Gas => [ GAS ]
   Address => [ ADDRESS ]
   Balance addr => compile addr ++ [ BALANCE ]
@@ -460,6 +465,11 @@ codecopy = CodeCopy
 
 ops : List OpCode -> Expr 
 ops = Ops
+
+(>>=) : Expr -> Expr -> Expr 
+(>>=) = Seq
+
+-- infixr 7 >> 
 
 
 
@@ -723,15 +733,40 @@ main = do
       eg. as an Expr
       
     Eg. it should take an expression as arg...
+  --------
     
+    all these operations are stateful - change tings. 
+    a general purpose lambda... that can refer to the stack is going to be be useful...
+    - the number of lambda args - is found  
+
+    Applly is just push the arg. then jump to the expression.
+    Q - what about return address?...
+
+    Using a >>= \x -> b
+    or just
+      a >>= t 1 -> _1 
+  
+    even if not articulate properly is good.
+    a single compile.
+    stack variable versus mem variable.
 -}
-  let all =
+  let all_ =
           (compile $ codecopy 0 30 16 )                      -- copy contract code to memory 0, code pos 30, len 16
        ++ (compile $ create 0 0 16 )                         -- create contract value 0, mem address 0, len 16
        ++ (compile $ call gas (ops [ DUP 6 ]) 0  0x0 0x0 0x0 0x0 )   -- call contract, swapping in address
        ++ [ POP, POP, STOP ]                               -- padding
        -- ++ simpleLoader 5                                     -- contract loading 
        ++ (compile $ loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
+
+
+  let all =
+      compile $
+        codecopy 0 30 16                                    -- copy contract code to memory 0, code pos 30, len 16
+        >>= create 0 0 16                                   -- create contract value 0, mem address 0, len 16
+        >>= call gas (ops [ DUP 6 ]) 0  0x0 0x0 0x0 0x0     -- call contract, swapping in address
+        >>= ops [ POP, POP, STOP ] 
+        >>= (loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
+
 
 
   -- make the loader a first class compile primitive.
