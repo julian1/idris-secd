@@ -66,7 +66,12 @@ data Expr : Type where
   -- monadic - not a pure expression
   -- call(g, a, v, in, insize, out, outsize)
   Call : Expr -> Expr -> Expr -> Expr -> Expr -> Expr -> Expr  -> Expr
+
+  -- create(v, p, s)       create new contract with code mem[p..(p+s)) and send v wei and return the new address
   Create : Expr -> Expr -> Expr -> Expr
+
+  -- codecopy(t, f, s)   -   copy s bytes from code at position f to mem at position t
+  CodeCopy : Expr -> Expr -> Expr -> Expr
 
   Gas : Expr
   Address : Expr
@@ -173,9 +178,9 @@ data OpCode : Type where
 
   STOP    : OpCode    -- halts execution
 
-  CODECOPY : OpCode
   CALL     : OpCode
   CREATE   : OpCode
+  CODECOPY : OpCode
 
   GAS      : OpCode
   ADDRESS  : OpCode
@@ -230,9 +235,9 @@ human expr = case expr of
   LOG0    => "log0"
   STOP    => "stop"
 
-  CODECOPY => "codecopy"
   CALL    => "call"
   CREATE  => "create"
+  CODECOPY => "codecopy"
 
   GAS     => "gas"
   ADDRESS => "address"
@@ -276,9 +281,9 @@ machine expr = case expr of
   LOG0    => "a0"
   STOP    => "00"
 
-  CODECOPY => "39"
   CALL    => "f1"
   CREATE  => "f0"
+  CODECOPY => "39"
 
   GAS     => "5a"
   ADDRESS => "30"
@@ -353,6 +358,9 @@ compile expr = case expr of
   -- create(v, p, s)       create new contract with code mem[p..(p+s)) and send v wei and return the new address
   Create v addr s => compile s ++ compile addr ++ compile v ++ [ CREATE ]
 
+  -- codecopy(t, f, s)   -   copy s bytes from code at position f to mem at position t
+  CodeCopy addr f s => compile s ++ compile f ++ compile addr ++ [ CODECOPY ]
+
   -- IMPORTANT - codecopy can be used in place of [ push, mstore ] for large literals, not just code
   -- val is confusing with v for value.
 
@@ -415,6 +423,11 @@ call = Call
 create: Expr -> Expr -> Expr -> Expr 
 create = Create
 
+codecopy : Expr -> Expr -> Expr -> Expr 
+codecopy = CodeCopy
+
+-- IMPORTANT - all the stateful operations - they should be using an append/ monoid. Not embedded in an expression.
+-- particularly when use vars
 
 mstore : Expr -> Expr -> Expr
 mstore = MStore
@@ -586,22 +599,18 @@ main = do
       ++ [ STOP ]
 
 
-  -- it's a bit of a tangle
 
-  -- the way to use hevm with multiple contracts is with evm create?
-
-  -- when calling create hevm gives me a page of stops, and the return address is 0x01, which 
-  -- I am interpreting as an error, rather than the created contract address ...
-  -- offset 
-
-  -- WE NEED TO LOAD into MEMORY FIRST !!!!
+  -- AHHH perhaps create doesn't load the contract code from mem. instead loads loader code that loads the contract. 
+  -- which will be created on return
+  -- that might make things a lot easier.
 
   let all =
-          (compile $ create 0 23 5 )                        -- create contract value 0, address 22, len 5
-       ++ [ POP ]
+          (compile $ codecopy 0 30 5 )                      -- copy contract code to memory 0, code pos 30, len 5
+       ++ (compile $ create 0 0 5 )                         -- create contract value 0, mem address 0, len 5
+       ++ [ POP ]                                           -- should be the address of the created contract
        ++ (compile $ call gas 0x1  0 0x0 0x0 0x0 0x0 )      -- call contract - which we suppose is deployed at addr 0x01
        ++ [ STOP ]
-       ++ (compile $ add 3 4)                               -- simple contract to add two numbers - offset is 22
+       ++ (compile $ add 3 4)                               -- simple contract to add two numbers - offset is 30 
 
   -- when we do a create call, hevm changes context and gives us a screen of stop
   -- and returns value 0x01 which seems wrong.
