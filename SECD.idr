@@ -35,7 +35,10 @@ data S : Type where
 
 eval : (  List Code, List S )  -> (  List Code, List S )
 eval (c:: cs, ss) = 
-  (cs, ss)
+  case c of
+    Value val => (cs, ss)
+    _  => (cs, ss)
+
 
   
 main : IO ()
