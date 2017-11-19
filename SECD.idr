@@ -30,12 +30,14 @@ Evaluation of C proceeds similarly to other RPN expressions.
 
 data Code : Type where
   -- value ...
-  Value : Integer ->  Code
+  LDC : Integer ->  Code
 
   Identifier : Integer ->  Code    -- debrujn index - 
   -- app  - takes 2 values off the stack...
   Ap    : Code
+
   -- a closure is pushed onto the stack
+  -- abstraction implies - a single argument
   Abstraction : Code
 
 
@@ -63,29 +65,35 @@ eval ( Nil , ss) = (Nil, ss)
 
 eval (c:: cs, ss) =
   case c of
-    Value val => eval (cs, Value val :: ss)
+    LDC val => eval (cs, Value val :: ss)
 
-    Abstraction => eval (cs, Abstraction :: ss)
+    Abstraction => eval (cs, Abstraction :: ss) -- should be adding to the env bindings also
 
     Ap => 
       eval (
-        let ( s1 :: s2 :: ss' ) = ss 
+        -- s1 == abstraction, s2 == argument, if there's a result we should push it back
+        let ( a1 :: a2 :: ss' ) = ss 
         in (cs, ss')
       )
     _  => (cs, ss)
 
+---
+match : Code -> Code -> Code 
+match Abstraction (Value val) = Value val
 
+-- we need an inbuilt? 
+-- OR can we - handle this by matching.... 
 
-
-
+-- add 3 4  -- i don't see how we can encode a binop?  \x -> \y -> x + y
+--- think that it can only be done - by using a variable...
 
 
 main : IO ()
 main = do
   -- putStrLn $ "hithere " ++ show [ (Value 123) ]
 
-  -- let codes = [ Value 123, Abstraction, Ap ]
-  let codes = [ Value 123, Value 456 ]
+  let codes = [ Value 123, Abstraction, Ap ]
+  -- let codes = [ Value 123, Value 456 ]
 
   let ret = eval (codes, [])
 
