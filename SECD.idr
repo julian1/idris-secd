@@ -22,6 +22,8 @@
 data Code : Type where
   -- value ...
   Value : Integer ->  Code
+
+  Identifier : Integer ->  Code    -- debrujn index
   -- app  - takes 2 values off the stack...
   Ap    : Code
   -- a closure is pushed onto the stack
@@ -30,13 +32,13 @@ data Code : Type where
 
 -- would be trying to use the evm stack here
 data S : Type where
-  Integer : Integer -> S
+  Literal : Integer -> S
 
 
 eval : (  List Code, List S )  -> (  List Code, List S )
 eval (c:: cs, ss) = 
   case c of
-    Value val => (cs, ss)
+    Value val => (cs, Literal val :: ss)
     _  => (cs, ss)
 
 
@@ -46,5 +48,11 @@ main : IO ()
 main = do
   putStrLn "hithere" 
 
+  let codes = [ Value 123 ] 
+
+  let ret = eval (codes, [])
+
+
+  pure ()
 
 
