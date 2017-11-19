@@ -34,11 +34,9 @@ data Code : Type where
 Show Code where
   show (Value val) = "Value " ++ show val
   show (Identifier val) = "Identifier " ++ show val
-{-
-case c of
-    Value val => "Value " ++ show val
-    _ => "code" 
--}
+
+
+
 
 -- would be trying to use the evm stack here
 data S : Type where
