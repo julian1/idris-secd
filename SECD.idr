@@ -16,7 +16,8 @@
 
 --  how does one push a closure onto the stack? ahhh. maybe it's an encoding for an opcode....
 
---  need to treat the items on the stack algebraically - eg. know what it is... 
+--  are stack items tagged? - or can the code/types keep track of it? on the stack algebraically - eg. know what it is... 
+
 
 
 data Code : Type where
@@ -30,9 +31,22 @@ data Code : Type where
   Abstraction : Code
 
 
+Show Code where
+  show (Value val) = "Value " ++ show val
+  show (Identifier val) = "Identifier " ++ show val
+{-
+case c of
+    Value val => "Value " ++ show val
+    _ => "code" 
+-}
+
 -- would be trying to use the evm stack here
 data S : Type where
   Literal : Integer -> S
+
+Show S where
+  show c = "s" 
+
 
 
 eval : (  List Code, List S )  -> (  List Code, List S )
@@ -42,16 +56,20 @@ eval (c:: cs, ss) =
     _  => (cs, ss)
 
 
+
+
+
+
   
 main : IO ()
-
 main = do
-  putStrLn "hithere" 
+  putStrLn $ "hithere " ++ show [ (Value 123) ]
 
   let codes = [ Value 123 ] 
 
   let ret = eval (codes, [])
 
+  printLn $ show ret 
 
   pure ()
 
