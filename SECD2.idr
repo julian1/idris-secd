@@ -6,7 +6,10 @@ data Code : Type where
   -- stack operations
   NIL : Code
   LDC : Integer ->  Code            -- load from context
-  LD  : Nat -> Nat -> Code          -- load i,j from environment
+  LD  : Nat -> Nat -> Code          -- load i,j from environment. might be i,j,k,l etc.
+                                    -- can actually load a list on the stack. eg. more than one element.
+                                    -- Ahhh but might be able to be done efficiently by just linking to it.
+                                    -- similar to push jump address.
   LDF : Code
 
   CAR : Code
@@ -32,6 +35,16 @@ Show Code where
   show (OP op) = "OP " ++ op 
 
 
+
+data Env : Type where
+  L : List Env -> Env
+  C : Integer -> Env
+
+j : Env
+j = L [ C 123, C 123, L [ C 123 ] ]
+
+-- an item can be a Constant. Or another list
+-- might to to express this... using  C ( C Nil )  Nil .
 
 
 data Item : Type where
@@ -87,13 +100,19 @@ eval (s, e, OP op ::cs) =
 
 -- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
 
+-- VERY IMPORTANT car and cons are builtins.
+-- Plus builtin functions +,  *, ATOM, CAR, CONS, EQ, etc.
+
 main : IO ()
 main = do
 
   let codes =  [ LDC 3, LDC 2, LDC 6, OP "+", OP "*" ] -- [ LDC 3, LDC 4, OP "+" ]
 
+  -- right so the environment store complicated structure like lists.
   -- let e =  ((1 3) (4 (5 6))) 
-  let e =  [[1, 3], [ 4, 5,  6 ] ] 
+  -- maybe it's different
+  -- let e =  L [ L [1, 3], L [ 4, L [ 5, 6]  ]] 
+  -- let e =  L [ [1, 3], L [ 4, L [ 5, 6]  ]] 
 
   putStrLn "hi"
 
