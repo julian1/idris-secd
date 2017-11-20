@@ -62,9 +62,11 @@ eval (s, e, LDC val::cs ) = eval (Constant val :: s, e, cs ) -- load constant on
 
 
 eval (s, e, OP op ::cs ) =
-  let (Constant a :: Constant b :: s') = s in
-  
-  eval ( Constant (a + b) :: s', e, cs)
+  let (Constant a :: Constant b :: s') = s 
+      value = case op of
+        "+" => a + b 
+  in
+  eval ( Constant value:: s', e, cs)
 
 -- Does op really evaluate something?  shouldn't it be apply?
 
