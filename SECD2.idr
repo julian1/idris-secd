@@ -52,17 +52,17 @@ Show Item where
 -- we need to write the tools the right way around 
 -- s e c d
 -- c s 
-eval : (  List Item, List Code  )  -> (  List Item, List Code  )
+eval : (  List Item, List (List Item), List Code  )  -> (  List Item, List (List Item), List Code  )
 
-eval ( ss, Nil ) = (ss, Nil ) -- no more c - finish
+eval ( ss, e, Nil ) = (ss, e, Nil ) -- no more c - finish
 
-eval (ss, c::cs ) =
+eval (ss, e, c::cs ) =
   case c of
-    LDC val => eval (Constant val :: ss, cs )
+    LDC val => eval (Constant val :: ss, e, cs )
 
     OP  op  => eval $ 
       case (op,ss) of
-        ("plus", Constant a :: Constant b :: ss') => eval ( Constant (a + b) :: ss', cs)
+        ("plus", Constant a :: Constant b :: ss') => eval ( Constant (a + b) :: ss', e, cs)
 
 -- Does op really evaluate something?  shouldn't it be apply?
 
@@ -72,7 +72,7 @@ main = do
   let codes = [ LDC 3, LDC 4, OP "plus" ]
   putStrLn "hi"
 
-  let ret = eval ([], codes )
+  let ret = eval ([], [[]], codes )
 
   printLn $ show ret
 
