@@ -36,18 +36,24 @@ Show Code where
 
 
 
-data Env : Type where
-  L : List Env -> Env
-  C : Integer -> Env
 
-j : Env
-j = L [ C 123, C 123, L [ C 123 ] ]
+  -- Env : Integer -> Env
 
--- an item can be a Constant. Or another list
--- might to to express this... using  C ( C Nil )  Nil .
+{-
+iNum Integer where
+    (+) = prim__addBigInt
+    (*) = prim__mulBigInt
+
+-- interface with Number ...
+Num Env where
+   (+)   C a C b = prim__addBigInt a b
+    (*) = prim__mulBigInt
+    fromInteger n = C n
+-}
 
 
 data Item : Type where
+  -- change name to StackItem... or Stack Elt or similar
 
   Constant : Integer -> Item
 
@@ -60,6 +66,38 @@ Show Item where
   show (Constant val) = "Constant " ++ show val
   show (Nil ) = "Nil"
   show (Function ) = "Function ??" 
+
+
+-- VERY IMPMORTANT
+-- OK - Items can be put on stack. (or the environment). Don't want to create a separate
+-- eg. function could be put in a list.
+-- type for items on environment.
+--
+-- we have a Constant, we have Nil so we should be able to create a list... 
+-- it really looks 
+
+-- really not sure... when a list is pushed on the stack - it looks like only the list head is pushed... 
+
+-- an item can be a Constant. Or another list
+-- might to to express this... using  C ( C Nil )  Nil .
+
+data Env : Type where
+  L : List Env -> Env
+  C : Integer -> Env
+
+Show Env where
+  show L xs = "L"
+  show C val = "C " 
+ 
+-- e = ((1 3) (4 (5 6))).
+e : Env
+e = L [ L [ C 1, C 3 ], L [ C 4, L [ C 5, C 6 ] ] ]
+
+-- :exec index 2 [ 1 .. 5  ]
+-- 
+
+
+
 
 {-
   https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
