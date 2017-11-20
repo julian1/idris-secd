@@ -9,6 +9,9 @@ data Code : Type where
   LD  : Nat -> Nat -> Code          -- load i,j from environment
   LDF : Code
 
+  CAR : Code
+  CDR : Code
+ 
   AP : Code
   OP : String -> Code
 
@@ -21,6 +24,9 @@ Show Code where
   show (LDC val) = "LDC " ++ show val
   show (LD i j) = "LD " ++ show i ++ " " ++ show j 
   show LDF = "LDF ??" 
+  
+  show CAR = "CAR"
+  show CDR = "CDR"
 
   show (AP ) = "AP" 
   show (OP op) = "OP " ++ op 
@@ -54,12 +60,18 @@ Show Item where
 
 eval : (List Item, List (List Item), List Code)  -> (List Item, List (List Item), List Code)
 
-eval (s, e, Nil ) = (s, e, Nil )                            -- no more c - finish
+
+eval (s, e, Nil) = (s, e, Nil )                            -- no more c - finish
+
+eval (s, e, LDC val:: c) = eval (Constant val :: s, e, c ) -- load constant on stack
 
 
-eval (s, e, LDC val:: c ) = eval (Constant val :: s, e, c ) -- load constant on stack
+eval (s, e, CAR :: c) = eval (Constant 123 :: s, e, c ) -- load constant on stack
 
-eval (s, e, OP op ::cs ) =
+
+-- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
+
+eval (s, e, OP op ::cs) =
   let (Constant a :: Constant b :: s') = s 
       value = case op of
         "+" => a + b 
@@ -68,14 +80,21 @@ eval (s, e, OP op ::cs ) =
   eval ( Constant value:: s', e, cs)
 
 
-
-
+--
+-- the car operation returns the first element of the list, while cdr returns the rest of the list. cons. 
 -- Does op really evaluate something?  shouldn't it be apply?
+-- 
+
+-- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
 
 main : IO ()
 main = do
 
-  let codes = [ LDC 3, LDC 4, OP "+" ]
+  let codes =  [ LDC 3, LDC 2, LDC 6, OP "+", OP "*" ] -- [ LDC 3, LDC 4, OP "+" ]
+
+  -- let e =  ((1 3) (4 (5 6))) 
+  let e =  [[1, 3], [ 4, 5,  6 ] ] 
+
   putStrLn "hi"
 
   let ret = eval ([], [[]], codes )
