@@ -59,8 +59,6 @@ eval (s, e, Nil ) = (s, e, Nil ) -- no more c - finish
 
 eval (s, e, LDC val:: c ) = eval (Constant val :: s, e, c ) -- load constant on stack
 
-
-
 eval (s, e, OP op ::cs ) =
   let (Constant a :: Constant b :: s') = s 
       value = case op of
@@ -68,12 +66,15 @@ eval (s, e, OP op ::cs ) =
   in
   eval ( Constant value:: s', e, cs)
 
+
+
+
 -- Does op really evaluate something?  shouldn't it be apply?
 
 main : IO ()
 main = do
 
-  let codes = [ LDC 3, LDC 4, OP "plus" ]
+  let codes = [ LDC 3, LDC 4, OP "+" ]
   putStrLn "hi"
 
   let ret = eval ([], [[]], codes )
