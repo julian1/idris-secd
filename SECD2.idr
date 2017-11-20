@@ -56,9 +56,14 @@ eval : (  List Item, List (List Item), List Code  )  -> (  List Item, List (List
 
 eval ( ss, e, Nil ) = (ss, e, Nil ) -- no more c - finish
 
+
+eval (ss, e, LDC val::cs ) = eval (Constant val :: ss, e, cs )
+
+
+
 eval (ss, e, c::cs ) =
   case c of
-    LDC val => eval (Constant val :: ss, e, cs )
+    -- LDC val => eval (Constant val :: ss, e, cs )
 
     OP  op  => eval $ 
       case (op,ss) of
