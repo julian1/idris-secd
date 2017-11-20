@@ -49,18 +49,20 @@ Show Item where
   http://skelet.ludost.net/sec/
 -}
 
+-- we need to write the tools the right way around 
+-- s e c d
 -- c s 
-eval : (  List Code, List Item )  -> (  List Code, List Item )
+eval : (  List Item, List Code  )  -> (  List Item, List Code  )
 
-eval ( Nil , ss) = (Nil, ss)
+eval ( ss, Nil ) = (ss, Nil ) -- no more c - finish
 
-eval (c::cs, ss) =
+eval (ss, c::cs ) =
   case c of
-    LDC val => eval (cs, Constant val :: ss)
+    LDC val => eval (Constant val :: ss, cs )
 
     OP  op  => eval $ 
       case (op,ss) of
-        ("plus", Constant a :: Constant b :: ss') => eval (cs,  Constant (a + b) :: ss')
+        ("plus", Constant a :: Constant b :: ss') => eval ( Constant (a + b) :: ss', cs)
 
 -- Does op really evaluate something?  shouldn't it be apply?
 
@@ -70,7 +72,7 @@ main = do
   let codes = [ LDC 3, LDC 4, OP "plus" ]
   putStrLn "hi"
 
-  let ret = eval (codes, [])
+  let ret = eval ([], codes )
 
   printLn $ show ret
 
