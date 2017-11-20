@@ -51,10 +51,10 @@ Show Item where
 
 -- we need to write the tools the right way around 
 -- s e c d
--- c s 
-eval : (  List Item, List (List Item), List Code  )  -> (  List Item, List (List Item), List Code  )
 
-eval (s, e, Nil ) = (s, e, Nil ) -- no more c - finish
+eval : (List Item, List (List Item), List Code)  -> (List Item, List (List Item), List Code)
+
+eval (s, e, Nil ) = (s, e, Nil )                            -- no more c - finish
 
 
 eval (s, e, LDC val:: c ) = eval (Constant val :: s, e, c ) -- load constant on stack
@@ -63,6 +63,7 @@ eval (s, e, OP op ::cs ) =
   let (Constant a :: Constant b :: s') = s 
       value = case op of
         "+" => a + b 
+        "*" => a * b 
   in
   eval ( Constant value:: s', e, cs)
 
