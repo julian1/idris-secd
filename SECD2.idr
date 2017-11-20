@@ -57,7 +57,7 @@ eval : (  List Item, List (List Item), List Code  )  -> (  List Item, List (List
 eval (s, e, Nil ) = (s, e, Nil ) -- no more c - finish
 
 
-eval (s, e, LDC val::cs ) = eval (Constant val :: s, e, cs ) -- load constant on stack
+eval (s, e, LDC val:: c ) = eval (Constant val :: s, e, c ) -- load constant on stack
 
 
 
