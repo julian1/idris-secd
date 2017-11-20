@@ -54,16 +54,17 @@ Show Item where
 -- c s 
 eval : (  List Item, List (List Item), List Code  )  -> (  List Item, List (List Item), List Code  )
 
-eval ( ss, e, Nil ) = (ss, e, Nil ) -- no more c - finish
+eval (s, e, Nil ) = (s, e, Nil ) -- no more c - finish
 
 
-eval (ss, e, LDC val::cs ) = eval (Constant val :: ss, e, cs ) -- load constant on stack
+eval (s, e, LDC val::cs ) = eval (Constant val :: s, e, cs ) -- load constant on stack
 
 
 
-eval (ss, e, OP op ::cs ) =
-      case ss of
-        Constant a :: Constant b :: ss' => eval ( Constant (a + b) :: ss', e, cs)
+eval (s, e, OP op ::cs ) =
+  let (Constant a :: Constant b :: s') = s in
+  
+  eval ( Constant (a + b) :: s', e, cs)
 
 -- Does op really evaluate something?  shouldn't it be apply?
 
