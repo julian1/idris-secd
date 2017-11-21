@@ -74,9 +74,12 @@ Show Item where
 
 
 -- TODO return Maybe Just...
-index' : Nat -> Nat -> Item -> Item
-index' c n Nil = Nil
-index' c n (x :: xs) =
+index : Nat -> Item -> Item
+index n Nil = Nil
+index Z     (x :: xs) = x
+index (S i) (x :: xs) = index i xs
+
+{-
   case n == c of
     True => x
     False => index' (c + 1) n xs
@@ -87,6 +90,7 @@ index = index' 1
 
 -- drill down tree
 locate : List Nat -> Item
+-}
 
 {-
   https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
@@ -120,11 +124,8 @@ eval (s, e, OP op ::cs) =
   eval ( C val :: s', e, cs)
 
 
---
 -- the car operation returns the first element of the list, while cdr returns the rest of the list. cons.
 -- Does op really evaluate something?  shouldn't it be apply?
---
-
 -- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
 
 -- VERY IMPORTANT car and cons are builtins.
@@ -138,13 +139,15 @@ main = do
   putStrLn $ show ret
 
 
-
   let e = (C 1 :: C 3) :: (C 4 :: (C 5 :: C 6))
 
   putStrLn $ show e 
 
   -- doesn't look right
-  let j = Main.index 3 e
+  -- why is it showing just the single value?
+
+  -- it's not matching in show- because
+  let j = Main.index 2 e
   putStrLn $ show j 
 
   putStrLn "hi"
