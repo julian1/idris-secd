@@ -114,7 +114,7 @@ e = L [ L [ C 1, C 3 ], L [ C 4, L [ C 5, C 6 ] ] ]
 -- we need to write the tools the right way around 
 -- s e c d
 
-eval : (List Item, List (List Item), List Code)  -> (List Item, List (List Item), List Code)
+eval : (Item, Item, List Code)  -> (Item, Item, List Code)
 
 
 eval (s, e, Nil) = (s, e, Nil )                            -- no more c - finish
