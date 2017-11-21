@@ -69,7 +69,7 @@ Show Item where
   show (C val) = "C " ++ show val
   show (Nil ) = "Nil"
   show (Function ) = "Function ??"
-  show (x :: xs )  = show x ++ "::"  ++ show xs 
+  show (x :: xs )  = "(" ++ show x ++ "::"  ++ show xs ++ ")"
 
 
 -- actually needs to be return Maybe Just...
@@ -136,6 +136,8 @@ main = do
 
 
   let e = (C 1 :: C 3) :: (C 4 :: (C 5 :: C 6))
+
+  putStrLn $ show e 
 
   let j = Main.index 0 e
 
