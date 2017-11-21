@@ -55,6 +55,7 @@ Num Env where
 data Item : Type where
   -- a tree/list like structure
   -- change name to StackItem... or Stack Elt or similar
+  -- note that Nil doesn't have to appear on rhs.
 
   Nil : Item
 
@@ -72,7 +73,7 @@ Show Item where
   show (x :: xs )  = "(" ++ show x ++ "::"  ++ show xs ++ ")"
 
 
--- actually needs to be return Maybe Just...
+-- TODO return Maybe Just...
 index' : Nat -> Nat -> Item -> Item
 index' c n Nil = Nil
 index' c n (x :: xs) =
@@ -80,9 +81,12 @@ index' c n (x :: xs) =
     True => x
     False => index' (c + 1) n xs
 
-
+-- indexing starts from 1
 index : Nat -> Item -> Item
-index = index' 0
+index = index' 1
+
+-- drill down tree
+locate : List Nat -> Item
 
 {-
   https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
@@ -130,7 +134,7 @@ main : IO ()
 main = do
 
   let codes =  [ LDC 3, LDC 2, LDC 6, OP "+", OP "*" ]
-  let ret = eval (Nil, [[]], codes )
+  let ret = eval (Nil, Nil, codes )
   putStrLn $ show ret
 
 
@@ -139,9 +143,10 @@ main = do
 
   putStrLn $ show e 
 
-  let j = Main.index 0 e
-
+  -- doesn't look right
+  let j = Main.index 3 e
   putStrLn $ show j 
+
   putStrLn "hi"
 
 
