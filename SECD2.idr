@@ -14,7 +14,7 @@ data Code : Type where
 
   CAR : Code
   CDR : Code
- 
+
   AP : Code
   OP : String -> Code
 
@@ -25,14 +25,14 @@ Show Code where
   -- stack operations
   show NIL = "NIL"
   show (LDC val) = "LDC " ++ show val
-  show (LD i j) = "LD " ++ show i ++ " " ++ show j 
-  show LDF = "LDF ??" 
-  
+  show (LD i j) = "LD " ++ show i ++ " " ++ show j
+  show LDF = "LDF ??"
+
   show CAR = "CAR"
   show CDR = "CDR"
 
-  show (AP ) = "AP" 
-  show (OP op) = "OP " ++ op 
+  show (AP ) = "AP"
+  show (OP op) = "OP " ++ op
 
 
 
@@ -53,6 +53,7 @@ Num Env where
 
 
 data Item : Type where
+  -- a tree/list like structure
   -- change name to StackItem... or Stack Elt or similar
 
   Nil : Item
@@ -61,17 +62,27 @@ data Item : Type where
 
   (::) : Item -> Item -> Item
 
-
   Function : Item
 
 
 Show Item where
   show (C val) = "C " ++ show val
   show (Nil ) = "Nil"
-  show (Function ) = "Function ??" 
+  show (Function ) = "Function ??"
+  show (x :: xs )  = show x ++ "::"  ++ show xs 
 
 
+-- actually needs to be return Maybe Just...
+index' : Nat -> Nat -> Item -> Item
+index' c n Nil = Nil
+index' c n (x :: xs) =
+  case n == c of
+    True => x
+    False => index' (c + 1) n xs
 
+
+index : Nat -> Item -> Item
+index = index' 0
 
 {-
   https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
@@ -80,7 +91,7 @@ Show Item where
   http://skelet.ludost.net/sec/
 -}
 
--- we need to write the tools the right way around 
+-- we need to write the tools the right way around
 -- s e c d
 
 eval : (Item, Item, List Code)  -> (Item, Item, List Code)
@@ -97,18 +108,18 @@ eval (s, e, CAR :: c) = eval (C 123 :: s, e, c ) -- load constant on stack
 -- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
 
 eval (s, e, OP op ::cs) =
-  let (C a :: C b :: s') = s 
-      value = case op of
-        "+" => a + b 
-        "*" => a * b 
+  let (C a :: C b :: s') = s
+      val = case op of
+        "+" => a + b
+        "*" => a * b
   in
-  eval ( C value:: s', e, cs)
+  eval ( C val :: s', e, cs)
 
 
 --
--- the car operation returns the first element of the list, while cdr returns the rest of the list. cons. 
+-- the car operation returns the first element of the list, while cdr returns the rest of the list. cons.
 -- Does op really evaluate something?  shouldn't it be apply?
--- 
+--
 
 -- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
 
@@ -123,57 +134,53 @@ main = do
   putStrLn $ show ret
 
 
-  -- right so the environment store complicated structure like lists.
-  -- let e =  ((1 3) (4 (5 6))) 
-  -- maybe it's different
-  -- let e =  L [ L [1, 3], L [ 4, L [ 5, 6]  ]] 
-  -- let e =  L [ [1, 3], L [ 4, L [ 5, 6]  ]] 
-
-
 
   let e = (C 1 :: C 3) :: (C 4 :: (C 5 :: C 6))
 
+  let j = Main.index 0 e
+
+  putStrLn $ show j 
   putStrLn "hi"
 
 
  {-
  -- e is a list of sublists. so variabes - can be lists...
-  
-  A lambda function (lambda plist body) is compiled to 
+
+  A lambda function (lambda plist body) is compiled to
        (LDF) || (body' || (RTN))
   where body' is the compiled code for body.
 
   Example. (lambda (x y) (+ x y)) is compiled to
       (LDF (LD (1.2) LD (1.1) + RTN))   -- the lambda code...
 
-    RTN 
+    RTN
       actually it restores the calling invocation stack - on d.
       is like a code path return. i think not just leave result on the stack.
 
     Ok, we know LD + and RTN . BUt what does LDF do...
     and what is the precedence????
-    - remember its code, 
+    - remember its code,
 
-  
+
     LDF   s e (LDF f.c) d            ->  ((f.e).s) e c d
       - so the code jump point just gets pushed.
 
-    this suggests that the code, is placed on the stack with copy of environment?... 
+    this suggests that the code, is placed on the stack with copy of environment?...
 
-    IMPORTANT - I think cons is pushing to the environment - so the lambda variables are there - not the stack. 
+    IMPORTANT - I think cons is pushing to the environment - so the lambda variables are there - not the stack.
 
-    so the code, (LD (1.2) LD (1.1) + RTN) is placed on the stack - in one stack slot... 
+    so the code, (LD (1.2) LD (1.1) + RTN) is placed on the stack - in one stack slot...
       REMEMBER it's not being applied yet.
 
-    
+
     AP    ((f.e') v.s) e (AP.c) d    ->  NIL (v.e') f (s e c.d)
 
     - v - the value goes in a new environment - the old environment is pushed to the dump.
-    - s - the stack 
+    - s - the stack
 
-    - OK it leaves NIl on stack because it's a fresh stack for new execution. 
+    - OK it leaves NIl on stack because it's a fresh stack for new execution.
       while the current s e c are pushed to d that makes sense.
-     
+
 
 
   An identifier is compiled to (LD (i.j)) where (i.j) is an index into stack e.
@@ -189,7 +196,7 @@ main = do
   LDF changes the code stack?
 
 
-  so LD (1.2) is an identifier in the environment - so what is it storing? 
+  so LD (1.2) is an identifier in the environment - so what is it storing?
 
   -- it's using freaking cons ?
 
