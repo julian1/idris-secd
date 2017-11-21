@@ -76,7 +76,8 @@ Show Item where
 -- we have a Constant, we have Nil so we should be able to create a list... 
 -- it really looks 
 
--- really not sure... when a list is pushed on the stack - it looks like only the list head is pushed... 
+-- when a list is pushed on the stack - it looks like only the list head is pushed... 
+-- eg. like this ((5 6).s)
 
 -- an item can be a Constant. Or another list
 -- might to to express this... using  C ( C Nil )  Nil .

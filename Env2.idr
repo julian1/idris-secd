@@ -1,4 +1,6 @@
 
+-- ok this works...
+-- 
 
 data Env : a -> Type where
 
@@ -17,7 +19,7 @@ k : Env Integer
 k = C 123 :: C 456 :: NIL
 
 m : Env Integer
-m = j :: k :: j
+m = j :: k :: NIL
 
 
 
@@ -28,7 +30,7 @@ main = do
   let u = 
       the Integer $
       case m of
-        (h :: g) => 123
+        ((C h :: C y) :: g) => 123
   
   putStrLn "hi"
 
