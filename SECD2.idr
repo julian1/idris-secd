@@ -57,7 +57,7 @@ data Item : Type where
 
   Nil : Item
 
-  Constant : Integer -> Item
+  C : Integer -> Item
 
   (::) : Item -> Item -> Item
 
@@ -66,41 +66,10 @@ data Item : Type where
 
 
 Show Item where
-  show (Constant val) = "Constant " ++ show val
+  show (C val) = "C " ++ show val
   show (Nil ) = "Nil"
   show (Function ) = "Function ??" 
 
-
--- VERY IMPMORTANT
--- OK - Items can be put on stack. (or the environment). Don't want to create a separate
--- eg. function could be put in a list.
--- type for items on environment.
---
--- we have a Constant, we have Nil so we should be able to create a list... 
--- it really looks 
-
--- when a list is pushed on the stack - it looks like only the list head is pushed... 
--- eg. like this ((5 6).s)
-
--- an item can be a Constant. Or another list
--- might to to express this... using  C ( C Nil )  Nil .
-
-{-
-data Env : Type where
-  L : List Env -> Env
-  C : Integer -> Env
-
-Show Env where
-  show L xs = "L"
-  show C val = "C " 
- 
--- e = ((1 3) (4 (5 6))).
-e : Env
-e = L [ L [ C 1, C 3 ], L [ C 4, L [ C 5, C 6 ] ] ]
-
--- :exec index 2 [ 1 .. 5  ]
--- 
--}
 
 
 
@@ -119,21 +88,21 @@ eval : (Item, Item, List Code)  -> (Item, Item, List Code)
 
 eval (s, e, Nil) = (s, e, Nil )                            -- no more c - finish
 
-eval (s, e, LDC val:: c) = eval (Constant val :: s, e, c ) -- load constant on stack
+eval (s, e, LDC val:: c) = eval (C val :: s, e, c ) -- load constant on stack
 
 
-eval (s, e, CAR :: c) = eval (Constant 123 :: s, e, c ) -- load constant on stack
+eval (s, e, CAR :: c) = eval (C 123 :: s, e, c ) -- load constant on stack
 
 
 -- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
 
 eval (s, e, OP op ::cs) =
-  let (Constant a :: Constant b :: s') = s 
+  let (C a :: C b :: s') = s 
       value = case op of
         "+" => a + b 
         "*" => a * b 
   in
-  eval ( Constant value:: s', e, cs)
+  eval ( C value:: s', e, cs)
 
 
 --
@@ -149,7 +118,10 @@ eval (s, e, OP op ::cs) =
 main : IO ()
 main = do
 
-  let codes =  [ LDC 3, LDC 2, LDC 6, OP "+", OP "*" ] -- [ LDC 3, LDC 4, OP "+" ]
+  let codes =  [ LDC 3, LDC 2, LDC 6, OP "+", OP "*" ]
+  let ret = eval (Nil, [[]], codes )
+  putStrLn $ show ret
+
 
   -- right so the environment store complicated structure like lists.
   -- let e =  ((1 3) (4 (5 6))) 
@@ -157,11 +129,11 @@ main = do
   -- let e =  L [ L [1, 3], L [ 4, L [ 5, 6]  ]] 
   -- let e =  L [ [1, 3], L [ 4, L [ 5, 6]  ]] 
 
+
+
+  let e = (C 1 :: C 3) :: (C 4 :: (C 5 :: C 6))
+
   putStrLn "hi"
-
-  let ret = eval ([], [[]], codes )
-
-  printLn $ show ret
 
 
  {-
