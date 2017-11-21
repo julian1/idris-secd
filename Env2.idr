@@ -30,7 +30,7 @@ main = do
   let u = 
       the Integer $
       case m of
-        ((C h :: C y) :: g) => 123
+        ((C h :: C y) :: g) => h
   
   putStrLn "hi"
 
