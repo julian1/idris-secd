@@ -1,11 +1,11 @@
 
 -- ok this works...
--- 
+-- so cons is not a function. instead it's a data constructor. 
 
 data Env : a -> Type where
 
   NIL :  Env a
-  C : a -> Env a
+  C : a -> Env a            -- It's ok to have C because we will have functions F as well...
 
   (::) : Env a -> Env a -> Env a
 
@@ -22,6 +22,10 @@ m : Env Integer
 m = j :: k :: NIL
 
 
+-- And it can represent our environment
+-- let e =  ((1 3) (4 (5 6))) 
+e : Env Integer
+e = (C 1 :: C 3) :: (C 4 :: (C 5 :: C 6))
 
 
 main : IO ()

@@ -55,9 +55,12 @@ Num Env where
 data Item : Type where
   -- change name to StackItem... or Stack Elt or similar
 
+  Nil : Item
+
   Constant : Integer -> Item
 
-  Nil : Item
+  (::) : Item -> Item -> Item
+
 
   Function : Item
 
@@ -82,6 +85,7 @@ Show Item where
 -- an item can be a Constant. Or another list
 -- might to to express this... using  C ( C Nil )  Nil .
 
+{-
 data Env : Type where
   L : List Env -> Env
   C : Integer -> Env
@@ -96,7 +100,7 @@ e = L [ L [ C 1, C 3 ], L [ C 4, L [ C 5, C 6 ] ] ]
 
 -- :exec index 2 [ 1 .. 5  ]
 -- 
-
+-}
 
 
 
