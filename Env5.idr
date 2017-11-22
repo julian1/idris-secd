@@ -25,21 +25,32 @@ Show T where
 -- TODO return Maybe Just...
 -- indexed from 0
 index : Nat -> T -> T
-index n Nil = Nil
+index i Nil = Nil    -- bad
 index Z     (x :: xs) = x
 index (S i) (x :: xs) = index i xs
+index i     (L xs) = index i xs
+
+
+locate  : List Nat -> T -> T
+locate path val = foldl (\v, i => index i v ) val path
+
 
 
 k : T
 k =  C 123 :: C 456 :: L ( C 666 :: C 777 :: Nil :: Nil ) ::  C 789 :: Nil --  
--- k =  C 123 :: C 456 :: L ( C 666 :: Nil :: Nil )  --  
--- k =  C 123 
 
--- in
+
 
 main : IO ()
 main = do
-  putStrLn $ show $ index 1 k
+  putStrLn $ show k
   putStrLn $ show $ index 2 k
   putStrLn $ show $ index 3 k
+  printLn "---"
+  putStrLn $ show $ locate [ 2, 0 ] k 
+  putStrLn $ show $ locate [ 0 ] k 
+  putStrLn $ show $ locate [ 3 ] k 
+  putStrLn $ show $ locate [ 2 ] k 
+
+  -- putStrLn $ show $ index 0 (index 2  k) 
 

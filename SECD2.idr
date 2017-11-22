@@ -8,7 +8,7 @@ data Code : Type where
   LDC : Integer ->  Code            -- load from context
 
 
-  LD  : Nat -> Nat -> Code          -- load i,j from environment. might be i,j,k,l etc.
+  LD  : List Nat -> Code          -- load i,j from environment. might be i,j,k,l etc.
                                     -- can actually load a list on the stack. eg. more than one element.
                                     -- Ahhh but might be able to be done efficiently by just linking to it.
                                     -- similar to push jump address.
@@ -27,7 +27,7 @@ Show Code where
   -- stack operations
   show NIL = "NIL"
   show (LDC val) = "LDC " ++ show val
-  show (LD i j) = "LD " ++ show i ++ " " ++ show j
+  show (LD xs) = "LD " ++ show xs -- eg. i,j -- i ++ " " ++ show j
   show LDF = "LDF ??"
 
   show CAR = "CAR"
@@ -81,6 +81,8 @@ eval (s, e, Nil) = (s, e, Nil )                       -- no more c - finish
 
 eval (s, e, LDC val:: c) = eval (C val :: s, e, c )   -- load constant on stack
 
+eval (s, e, (LD path ) :: c ) = eval ( s, e, c )   -- load constant on stack
+
 
 --eval (s, e, CAR :: c) = eval (C 123 :: s, e, c )      -- load constant on stack
 
@@ -110,6 +112,9 @@ main = do
   let ret = eval (Nil, Nil, codes )
   putStrLn $ show ret
 
+  let codes' = LD [ 1 ] :: Nil
+
+  putStrLn $ show codes'
 
   let e =  C 123 :: C 456 :: L ( C 666 :: C 777 :: Nil :: Nil ) ::  C 789 :: Nil --  
 
