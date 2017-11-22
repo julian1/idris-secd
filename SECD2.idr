@@ -6,6 +6,8 @@ data Code : Type where
   -- stack operations
   NIL : Code
   LDC : Integer ->  Code            -- load from context
+
+
   LD  : Nat -> Nat -> Code          -- load i,j from environment. might be i,j,k,l etc.
                                     -- can actually load a list on the stack. eg. more than one element.
                                     -- Ahhh but might be able to be done efficiently by just linking to it.
@@ -35,6 +37,13 @@ Show Code where
   show (OP op) = "OP " ++ op
 
 
+  
+data Item : Type where
+  Nil :  Item
+  C : Integer -> Item
+  L : Item -> Item       
+  (::) : Item -> Item -> Item     -- we want to constrain 1st Item to either C or L
+
 
 
 Show Item where
@@ -47,7 +56,7 @@ Show Item where
 
 -- TODO return Maybe Just...
 -- indexed from 0
-index : Nat -> Item -> Item
+index : Nat -> Item -> Item 
 index n Nil = Nil
 index Z     (x :: xs) = x
 index (S i) (x :: xs) = index i xs
@@ -73,7 +82,7 @@ eval (s, e, Nil) = (s, e, Nil )                       -- no more c - finish
 eval (s, e, LDC val:: c) = eval (C val :: s, e, c )   -- load constant on stack
 
 
-eval (s, e, CAR :: c) = eval (C 123 :: s, e, c )      -- load constant on stack
+--eval (s, e, CAR :: c) = eval (C 123 :: s, e, c )      -- load constant on stack
 
 
 -- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
@@ -102,7 +111,7 @@ main = do
   putStrLn $ show ret
 
 
-  let e = (C 1 :: C 3) :: (C 4 :: (C 5 :: C 6))
+  let e =  C 123 :: C 456 :: L ( C 666 :: C 777 :: Nil :: Nil ) ::  C 789 :: Nil --  
 
   putStrLn $ show e 
 
