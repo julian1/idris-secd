@@ -37,48 +37,23 @@ Show Code where
 
 
 
-
-data Item : Type where
-  -- a tree/list like structure
-  -- change name to StackItem... or Stack Elt or similar
-  -- note that Nil doesn't have to appear on rhs.
-
-  Nil : Item
-
-  C : Integer -> Item
-
-  -- (::) : Item -> Item -> Item
-  
-  L : Item -> Item
-
-  Function : Item
-
-
 Show Item where
-  show (C val) = "C " ++ show val
   show (Nil ) = "Nil"
-  show (Function ) = "Function ??"
-  show (L x) = "(" ++ show x ++ ")" -- l(x :: xs )  = "(" ++ show x ++ "::"  ++ show xs ++ ")"
+  show (C val) = "C " ++ show val 
+  show (L xs) = "(" ++ show xs ++ ")" 
+  show (x :: xs) =  show x ++ ", " ++ show xs 
+
 
 
 -- TODO return Maybe Just...
+-- indexed from 0
 index : Nat -> Item -> Item
 index n Nil = Nil
 index Z     (x :: xs) = x
 index (S i) (x :: xs) = index i xs
 
-{-
-  case n == c of
-    True => x
-    False => index' (c + 1) n xs
 
--- indexing starts from 1
-index : Nat -> Item -> Item
-index = index' 1
 
--- drill down tree
-locate : List Nat -> Item
--}
 
 {-
   https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
