@@ -25,14 +25,14 @@ Show T where
 -- TODO return Maybe Just...
 -- indexed from 0
 index : Nat -> T -> T
-index i Nil = Nil    -- bad
+index i Nil = Nil    -- bad, should be Nothing? Actually depends...
 index Z     (x :: xs) = x
 index (S i) (x :: xs) = index i xs
 index i     (L xs) = index i xs
 
 
-locate  : List Nat -> T -> T
-locate path val = foldl (\v, i => index i v ) val path
+locate : List Nat -> T -> T
+locate path val = foldl (\v, i => index i v) val path
 
 
 
