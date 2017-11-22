@@ -3,20 +3,18 @@
  data T : Type where
 
   Nil :  T
-  -- (::) : Item -> L -> L 
-  -- L : Integer -> T
 
-  R : Integer -> T -> T
+  C : Integer -> T -> T
 
   L : T -> T -> T
 
 
 j : T
-j =  R 456 $ R 123 Nil 
+j =  C 456 $ C 123 Nil 
 
 
 k : T
-k =  L ( R 456 $ R 123 Nil ) Nil
+k =  L ( C 456 $ C 123 Nil ) $ C 555 Nil
 
    
 {-
