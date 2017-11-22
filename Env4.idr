@@ -15,6 +15,9 @@ j : T
 j =  R 456 $ R 123 Nil 
 
 
+k : T
+k =  L ( R 456 $ R 123 Nil ) Nil
+
    
 {-
 data L : Type where

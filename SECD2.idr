@@ -37,20 +37,6 @@ Show Code where
 
 
 
-  -- Env : Integer -> Env
-
-{-
-iNum Integer where
-    (+) = prim__addBigInt
-    (*) = prim__mulBigInt
-
--- interface with Number ...
-Num Env where
-   (+)   C a C b = prim__addBigInt a b
-    (*) = prim__mulBigInt
-    fromInteger n = C n
--}
-
 
 data Item : Type where
   -- a tree/list like structure
@@ -61,7 +47,9 @@ data Item : Type where
 
   C : Integer -> Item
 
-  (::) : Item -> Item -> Item
+  -- (::) : Item -> Item -> Item
+  
+  L : Item -> Item
 
   Function : Item
 
@@ -70,7 +58,7 @@ Show Item where
   show (C val) = "C " ++ show val
   show (Nil ) = "Nil"
   show (Function ) = "Function ??"
-  show (x :: xs )  = "(" ++ show x ++ "::"  ++ show xs ++ ")"
+  show (L x) = "(" ++ show x ++ ")" -- l(x :: xs )  = "(" ++ show x ++ "::"  ++ show xs ++ ")"
 
 
 -- TODO return Maybe Just...
@@ -105,12 +93,12 @@ locate : List Nat -> Item
 eval : (Item, Item, List Code)  -> (Item, Item, List Code)
 
 
-eval (s, e, Nil) = (s, e, Nil )                            -- no more c - finish
+eval (s, e, Nil) = (s, e, Nil )                       -- no more c - finish
 
-eval (s, e, LDC val:: c) = eval (C val :: s, e, c ) -- load constant on stack
+eval (s, e, LDC val:: c) = eval (C val :: s, e, c )   -- load constant on stack
 
 
-eval (s, e, CAR :: c) = eval (C 123 :: s, e, c ) -- load constant on stack
+eval (s, e, CAR :: c) = eval (C 123 :: s, e, c )      -- load constant on stack
 
 
 -- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
@@ -151,6 +139,23 @@ main = do
   putStrLn $ show j 
 
   putStrLn "hi"
+
+
+
+
+  -- Env : Integer -> Env
+
+{-
+iNum Integer where
+    (+) = prim__addBigInt
+    (*) = prim__mulBigInt
+
+-- interface with Number ...
+Num Env where
+   (+)   C a C b = prim__addBigInt a b
+    (*) = prim__mulBigInt
+    fromInteger n = C n
+-}
 
 
  {-
