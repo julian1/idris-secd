@@ -93,32 +93,11 @@ eval (s, e, LDC val:: c) = eval ( C val :: s, e, c )   -- load constant on stack
 
 eval (s, e, (LD path ) :: c ) =  eval ( locate path e :: s, e, c )   -- load env on stack
 
--- GAHHH - we really just want to cons the value onto our stack whether it's an integer or another list ...
-
-
--- Uggh but now we don't know how to concat?
-
---eval (s, e, CAR :: c) = eval (C 123 :: s, e, c )      -- load constant on stack
-
-
--- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
-
--- index (S i) (L $ x :: xs)  = 
-
 eval (s, e, OP op ::cs) =
   case s of  
     L (C a :: C b :: s') => eval ( C (a + b) ::  L s', e, cs ) 
-{-
 
-  -- let L (C a :: C b :: s') = s
-a + b ::
-  let (L $ C a :: C b :: s') = s
-      val = case op of
-        "+" => a + b
-        "*" => a * b
-  in
-  eval ( s, e, cs)
--}
+
 
 -- the car operation returns the first element of the list, while cdr returns the rest of the list. cons.
 -- Does op really evaluate something?  shouldn't it be apply?
@@ -154,6 +133,16 @@ main = do
   putStrLn $ show $ locate [ 1, 1, 0 ] e    -- expect C 5   , got  (C 5, C 6) 
   putStrLn $ show $ locate [ 0, 0 ] e    -- expect C 1      , got (C 1, C 3), (C 4, (C 5, C 6))  
 
+
+  putStrLn "-----"
+  -- its 
+
+  let codes =  [ LD [ 1, 1] ]
+  let ret = eval ( L Nil, e, codes )
+  putStrLn $ show ret
+
+
+ 
 
 {-
 iNum Integer where
