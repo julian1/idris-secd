@@ -37,13 +37,14 @@ main = do
   let e =  L ( 1 :: 3 :: Nil ) $  L ( 4 :: L ( 5 :: 6 :: Nil ) Nil ) Nil 
 
   -- let e =  the Item [ 1, 3 ]   -- wow can use List Notation directly !!! 
+  -- let e =  the Item $ L [ 1, 3 ] $ L [ 4, L [ 5, 6 ] Nil ] Nil   -- wow can use List Notation directly !!! 
 
   putStrLn $ show e
   putStrLn "-----"
 
   putStrLn $ show $ locate [ 0, 0 ] e    -- expect 1 
-  putStrLn $ show $ locate [ 1 ] e       -- expect (4, (5, 6))  -- WRONG
-  putStrLn $ show $ locate [ 1, 1 ] e     -- expect (C 5, C 6)    or should it be L (C 5, C 6)
+  putStrLn $ show $ locate [ 1 ] e       -- expect (4, (5, 6))  -- correct 
+  putStrLn $ show $ locate [ 1, 1 ] e     -- expect (C 5, C 6)    
   putStrLn $ show $ locate [ 1, 1, 1 ] e    -- ok C 6    
   putStrLn $ show $ locate [ 1, 1, 0 ] e    -- expect C 5   , got  (C 5, C 6) 
   putStrLn $ show $ locate [ 0, 0 ] e    -- expect C 1      , got (C 1, C 3), (C 4, (C 5, C 6))  
