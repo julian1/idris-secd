@@ -9,7 +9,7 @@ data Item : Type where
 -- Or use L as a L constructor
 
 Show Item where
-  show Nil       = "Nil"
+  show Nil       = "" -- "Nil"
   show (L x xs)  = "(" ++ show x ++ "), " ++ show xs 
   show (x :: xs) =  show x ++ ", " ++ show xs
   show val       =  show val
@@ -21,7 +21,7 @@ Show Item where
 index : Nat -> Item -> Item
 index (S i) (x :: xs)  = index i xs
 index (S i) (L  x xs ) = index i xs 
-index Z     (L  x xs ) = x  -- correct -- or should be 
+index Z     (L  x xs ) = x          -- correct -- absence of path path would give = L x xs
 index Z     (x :: xs)  = x :: Nil   -- Must wrap because we can't return a raw integer
 index Z     Nil        = Nil 
 
@@ -35,14 +35,14 @@ main : IO ()
 main = do
 
   -- e = ((1 3) (4 (5 6))).
-  let e =  L ( 1 :: 3 :: Nil ) $  L ( 4 :: L ( 5 :: 6 :: Nil ) Nil ) Nil 
+  -- let e =  L ( 1 :: 3 :: Nil ) $  L ( 4 :: L ( 5 :: 6 :: Nil ) Nil ) Nil 
 
-  -- let e =  the Item [ 1, 3 ]   -- wow can use List Notation directly !!! 
-  -- let e =  the Item $ L [ 1, 3 ] $ L [ 4, L [ 5, 6 ] Nil ] Nil   -- wow can use List Notation directly !!! 
+  let e =  L [ 1, 3 ]  $  L ( 4 :: L [ 5, 6 ] Nil ) Nil 
 
   putStrLn $ show e
   putStrLn "-----"
 
+  putStrLn $ show $ locate [ 0 ] e       -- 1,3   -- correct 
   putStrLn $ show $ locate [ 0, 0 ] e    -- expect 1 
   putStrLn $ show $ locate [ 1 ] e       -- expect (4, (5, 6))  -- correct 
   putStrLn $ show $ locate [ 1, 1 ] e     -- expect (C 5, C 6)    
