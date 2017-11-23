@@ -1,3 +1,10 @@
+{-
+  SECD
+  https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
+  http://netzhansa.blogspot.com/2008/09/revisiting-secd-and-power-of-lisp-while.html
+
+  http://skelet.ludost.net/sec/
+-}
 
 import Debug.Trace
 
@@ -37,26 +44,26 @@ Show Code where
   show (OP op) = "OP " ++ op
 
 
-  
+
 data Item : Type where
-  Nil :  Item
-  C : Integer -> Item
-  L : Item -> Item       
-  (::) : Item -> Item -> Item     -- we want to constrain 1st Item to either C or L
+  Nil   : Item
+  C     : Integer -> Item
+  L     : Item -> Item
+  (::)  : Item -> Item -> Item     -- we want to constrain 1st Item to either C or L
 
 
 
 Show Item where
   show (Nil ) = "Nil"
-  show (C val) = "C " ++ show val 
-  show (L xs) = "(" ++ show xs ++ ")" 
-  show (x :: xs) =  show x ++ ", " ++ show xs 
+  show (C val) = "C " ++ show val
+  show (L xs) = "(" ++ show xs ++ ")"
+  show (x :: xs) =  show x ++ ", " ++ show xs
 
 
 {-
 -- TODO return Maybe Just...
 -- indexed from 0
-index : Nat -> Item -> Item 
+index : Nat -> Item -> Item
 index n Nil = Nil
 index Z     (x :: xs) = x
 index (S i) (x :: xs) = index i xs
@@ -65,7 +72,7 @@ index (S i) (x :: xs) = index i xs
 
 -- TODO return Maybe Just...
 -- indexed from 0
-index : Nat -> Item -> Item 
+index : Nat -> Item -> Item
 index i Nil = Nil    -- bad, should be Nothing? Actually depends...
 index Z     (x :: xs) = x
 index (S i) (x :: xs) = index i xs
@@ -73,15 +80,8 @@ index i     (L xs) = index i xs
 
 -- drill into structure using path
 locate : List Nat -> Item -> Item
-locate path val = foldl (flip 
+locate path val = foldl (flip index) val path
 
-
-{-
-  https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
-  http://netzhansa.blogspot.com/2008/09/revisiting-secd-and-power-of-lisp-while.html
-
-  http://skelet.ludost.net/sec/
--}
 
 -- we need to write the tools the right way around
 -- s e c d
@@ -128,16 +128,16 @@ main = do
 
   putStrLn $ show codes'
 
-  let e =  C 123 :: C 456 :: L ( C 666 :: C 777 :: Nil :: Nil ) ::  C 789 :: Nil --  
+  let e =  C 123 :: C 456 :: L ( C 666 :: C 777 :: Nil :: Nil ) ::  C 789 :: Nil --
 
-  putStrLn $ show e 
+  putStrLn $ show e
 
   -- doesn't look right
   -- why is it showing just the single value?
 
   -- it's not matching in show- because
   let j = Main.index 2 e
-  putStrLn $ show j 
+  putStrLn $ show j
 
   putStrLn "hi"
 
