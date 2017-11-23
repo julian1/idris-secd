@@ -20,8 +20,8 @@ Show Item where
 -- indexed from 0
 index : Nat -> Item -> Item
 index (S i) (x :: xs)  = index i xs
-index (S i) (L  x xs ) = index i xs 
-index Z     (L  x xs ) = x          -- correct -- absence of path path would give = L x xs
+index (S i) (L  x xs)  = index i xs 
+index Z     (L  x xs)  = x          -- correct -- with no path index would yield = L x xs
 index Z     (x :: xs)  = x :: Nil   -- Must wrap because we can't return a raw integer
 index Z     Nil        = Nil 
 
