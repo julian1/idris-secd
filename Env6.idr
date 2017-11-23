@@ -1,8 +1,7 @@
 
 data Item : Type where
   Nil   : Item
-  -- C     : Integer -> Item
-  (::)  : Integer -> Item -> Item     -- we want to constrain 1st Item to either C or L
+  (::)  : Integer -> Item -> Item
   L     : Item -> Item -> Item
 
 -- can change this to take an Integer only
@@ -21,14 +20,9 @@ index : Nat -> Item -> Item
 
 index Z     a = a 
 index (S i) (x :: xs) = index i xs
-
 index Z     (L  x xs ) = x 
 index (S i) (L  x xs ) = index i xs 
-{-
-  case i of 
-    Z => x  
-    _ => index i xs 
--}
+
 
 -- drill into structure using path
 locate : List Nat -> Item -> Item
@@ -41,8 +35,8 @@ main = do
 
   -- e = ((1 3) (4 (5 6))).
   -- let e =  L ( 1 :: 3 :: Nil ) :: L ( 4 :: L ( 5 :: 6 :: Nil ) :: Nil )  
-  let e =  L ( 1 :: 3 :: Nil ) :: L ( 4 :: L ( 5 :: 6 :: Nil ) :: Nil )  
-  let e =  1 :: 3 :: Nil 
+  let e =  L ( 1 :: 3 :: Nil ) $  L ( 4 :: L ( 5 :: 6 :: Nil ) Nil ) Nil 
+  let e' =  L ( 1 :: 3 :: Nil)  Nil   -- GOOD
   putStrLn $ show e
 
   putStrLn "-----"
