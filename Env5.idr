@@ -30,9 +30,9 @@ index Z     (x :: xs) = x
 index (S i) (x :: xs) = index i xs
 index i     (L xs) = index i xs
 
-
+-- drill into structure using path
 locate : List Nat -> T -> T
-locate path val = foldl (\v, i => index i v) val path
+locate path val = foldl (flip index) val path
 
 
 
