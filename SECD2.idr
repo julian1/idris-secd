@@ -60,20 +60,10 @@ Show Item where
   show (x :: xs) =  show x ++ ", " ++ show xs
 
 
-{-
--- TODO return Maybe Just...
+-- TODO return Maybe Just, instead of Nil if can't find 
 -- indexed from 0
 index : Nat -> Item -> Item
-index n Nil = Nil
-index Z     (x :: xs) = x
-index (S i) (x :: xs) = index i xs
--}
-
-
--- TODO return Maybe Just...
--- indexed from 0
-index : Nat -> Item -> Item
-index i Nil = Nil    -- bad, should be Nothing? Actually depends...
+index i Nil = Nil                     -- bad, should be Nothing? Actually depends...
 index Z     (x :: xs) = x
 index (S i) (x :: xs) = index i xs
 index i     (L xs) = index i xs
@@ -93,7 +83,7 @@ eval (s, e, Nil) = (s, e, Nil )                       -- no more c - finish
 
 eval (s, e, LDC val:: c) = eval (C val :: s, e, c )   -- load constant on stack
 
-eval (s, e, (LD path ) :: c ) = eval ( s, e, c )   -- load constant on stack
+eval (s, e, (LD path ) :: c ) = eval ( locate path e :: s, e, c )   -- load env on stack
 
 
 --eval (s, e, CAR :: c) = eval (C 123 :: s, e, c )      -- load constant on stack
@@ -128,7 +118,8 @@ main = do
 
   putStrLn $ show codes'
 
-  let e =  C 123 :: C 456 :: L ( C 666 :: C 777 :: Nil :: Nil ) ::  C 789 :: Nil --
+  -- e = ((1 3) (4 (5 6))).
+  let e =  L ( C 3 :: C 3 ) :: L ( C 4 :: L ( C 5 :: C 6 ) )  
 
   putStrLn $ show e
 
