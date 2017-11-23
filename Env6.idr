@@ -1,16 +1,20 @@
+{-
+  this works well . Except that we can't just cons the damn thing.... 
+    when working with the stack of the secd.
 
+-}
 data Item : Type where
   Nil   : Item
   (::)  : Integer -> Item -> Item
-  L     : Item -> Item -> Item
+  T     : Item -> Item -> Item
 
 
 -- can change this to take an Integer only
--- Or use L as a L constructor
+-- Or use T as a T constructor
 
 Show Item where
   show Nil       = "" -- "Nil"
-  show (L x xs)  = "(" ++ show x ++ "), " ++ show xs 
+  show (T x xs)  = "(" ++ show x ++ "), " ++ show xs 
   show (x :: xs) =  show x ++ ", " ++ show xs
   show val       =  show val
 
@@ -20,8 +24,8 @@ Show Item where
 -- indexed from 0
 index : Nat -> Item -> Item
 index (S i) (x :: xs)  = index i xs
-index (S i) (L  x xs)  = index i xs 
-index Z     (L  x xs)  = x          -- correct -- with no path index would yield = L x xs
+index (S i) (T  x xs)  = index i xs 
+index Z     (T  x xs)  = x          -- correct -- with no path index would yield = T x xs
 index Z     (x :: xs)  = x :: Nil   -- Must wrap because we can't return a raw integer
 index Z     Nil        = Nil 
 
@@ -35,9 +39,9 @@ main : IO ()
 main = do
 
   -- e = ((1 3) (4 (5 6))).
-  -- let e =  L ( 1 :: 3 :: Nil ) $  L ( 4 :: L ( 5 :: 6 :: Nil ) Nil ) Nil 
+  -- let e =  T ( 1 :: 3 :: Nil ) $  T ( 4 :: T ( 5 :: 6 :: Nil ) Nil ) Nil 
 
-  let e =  L [ 1, 3 ]  $  L ( 4 :: L [ 5, 6 ] Nil ) Nil 
+  let e =  T [ 1, 3 ]  $  T ( 4 :: T [ 5, 6 ] Nil ) Nil 
 
   putStrLn $ show e
   putStrLn "-----"

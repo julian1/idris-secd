@@ -45,43 +45,42 @@ Show Code where
 
 
 
+
+
 data Item : Type where
-  Nil   : Item
+  Nil   : Item        -- having this allows us to use ordinar [] syntax 
+  (::)  : Item -> Item -> Item
+
   C     : Integer -> Item
   L     : Item -> Item
-  (::)  : Item -> Item -> Item     -- we want to constrain 1st Item to either C or L
 
 
+-- can change this to take an Integer only
+-- Or use L as a L constructor
 
 Show Item where
-  show (Nil ) = "Nil"
-  show (C val) = "C " ++ show val
-  show (L xs) = "(" ++ show xs ++ ")"
   show (x :: xs) =  show x ++ ", " ++ show xs
+  show Nil       = "Nil"
+  show (C val)   = "C " ++ show val
+  -- show (L val)   = "(L " ++ show val ++ ")"
+  show (L val)   = "(" ++ show val ++ ")"
 
 
--- TODO return Maybe Just, instead of Nil if can't find 
+
+-- LODO return Maybe Just, instead of Nil if can't find 
 -- indexed from 0
 index : Nat -> Item -> Item
-index i Nil = Nil                     -- bad, should be Nothing? Actually depends...
--- index Z     (x :: xs) = x
--- index Z     (L xs) = L xs
-
--- index Z     a    = a 
--- index Z     ( x :: xs) = x 
-index Z     a = a 
-
-index (S i) (x :: xs) = index i xs
--- index (S i) (L  xs ) = index i xs
-index i (L  xs ) = index i xs
-
--- perhaps 0 should match the list. 1 should match first item, 2 second item...
-
--- this is all hopeless...
+index (S i) (x :: xs)  = index i xs
+index Z     (x :: xs)  = x
+index Z     (C val)    = C val
+index Z     Nil        = Nil 
+index i     (L val)    = index i val
 
 -- drill into structure using path
 locate : List Nat -> Item -> Item
 locate path val = foldl (flip index) val path
+
+
 
 
 -- we need to write the tools the right way around
@@ -92,10 +91,14 @@ eval : (Item, Item, List Code)  -> (Item, Item, List Code)
 
 eval (s, e, Nil) = (s, e, Nil )                       -- no more c - finish
 
-eval (s, e, LDC val:: c) = eval (C val :: s, e, c )   -- load constant on stack
+eval (s, e, LDC val:: c) = eval ( C val :: s, e, c )   -- load constant on stack
 
-eval (s, e, (LD path ) :: c ) = eval ( locate path e :: s, e, c )   -- load env on stack
+eval (s, e, (LD path ) :: c ) =  eval ( locate path e :: s, e, c )   -- load env on stack
 
+-- GAHHH - we really just want to cons the value onto our stack whether it's an integer or another list ...
+
+
+-- Uggh but now we don't know how to concat?
 
 --eval (s, e, CAR :: c) = eval (C 123 :: s, e, c )      -- load constant on stack
 
@@ -128,26 +131,21 @@ main = do
 
   putStrLn "-----"
   -- e = ((1 3) (4 (5 6))).
-  let e =  L ( C 1 :: C 3 ) :: L ( C 4 :: L ( C 5 :: C 6 ) )  
+
+  -- SO WE NEED THE Nils TO destructure properly.
+  -- let e =  L ( C 1 :: C 3 ) :: L ( C 4 :: L ( C 5 :: C 6 ) )  
+
+  let e =  the Item $ [ L [ C 1, C 3 ] , L [ C 4 , L [ C 5 , C 6 ] ]  ] 
   putStrLn $ show e
 
-  -- ugghhh it drilled into the value... 
-  -- it's not working...
-  -- let ret = eval (Nil, e, [ LD [ 1 ] ] )
-  -- putStrLn $ show ret
 
   putStrLn "-----"
-  -- putStrLn $ show $ locate [ 1, 1, 0 ] e
+  putStrLn $ show $ locate [ 1, 1, 0 ] e  -- C5
   putStrLn $ show $ locate [ 1, 1 ] e    -- ok (C 5, C 6)    or should it be L (C 5, C 6)
   putStrLn $ show $ locate [ 1, 1, 1 ] e    -- ok C 6    
   putStrLn $ show $ locate [ 1, 1, 0 ] e    -- expect C 5   , got  (C 5, C 6) 
   putStrLn $ show $ locate [ 0, 0 ] e    -- expect C 1      , got (C 1, C 3), (C 4, (C 5, C 6))  
 
-
-  -- so it's not working properly... to drill down...
-
-
-  -- Env : Integer -> Env
 
 {-
 iNum Integer where
