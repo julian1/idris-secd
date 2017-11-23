@@ -1,10 +1,8 @@
 {-
-  This prevents creating invalid structure without Nil
+  This prevents us creating an invalid structure without Nil
   
   But we cannot just cons onto the list
   instead must use L (x :: xs )
-
-
 -}
 
 data Item : Type where
@@ -16,12 +14,15 @@ Show Item where
   show (L val)   = show val
 
 
--- but what about index...
-
+-- so have to have a special cons operator
 cons : Item -> Item -> Item 
-cons x b = case b of
+cons x xs = case xs of
   L lst => L (x :: lst)
   C val => L $ [ x , C val   ] 
+
+
+(::) : Item -> Item -> Item 
+(::) = cons
 
 
 index : Nat -> Item -> Item
@@ -43,10 +44,14 @@ main : IO ()
 main = do
 
   let e = the Item $ L [  L [ C 1, C 3 ] , L [ C 4 , L [ C 5 , C 6 ] ]  ]  
-
-  -- let j =  cons (C 1)  e 
   printLn e 
   putStrLn "-----"
+
+
+  printLn $ C 1 :: C 2 :: e 
+  putStrLn "-----"
+
+  -- let j =  cons (C 1)  e 
 
   putStrLn $ show $ locate [ 0 ] e       -- L 1,3   -- correct 
   putStrLn $ show $ locate [ 0, 0 ] e    -- expect 1 
