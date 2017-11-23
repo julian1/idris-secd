@@ -1,27 +1,34 @@
 
 data Item : Type where
   Nil   : Item
-  C     : Integer -> Item
-  L     : Item -> Item
-  (::)  : Item -> Item -> Item     -- we want to constrain 1st Item to either C or L
+  -- C     : Integer -> Item
+  (::)  : Integer -> Item -> Item     -- we want to constrain 1st Item to either C or L
+  L     : Item -> Item -> Item
 
-
+-- can change this to take an Integer only
+-- Or use L as a L constructor
 
 Show Item where
   show (Nil ) = "Nil"
-  show (C val) = "C " ++ show val
-  show (L xs) = "(" ++ show xs ++ ")"
+  show (val) =  show val
+  show (L x xs) = "(" ++ show x ++ ", " ++ show xs ++ ")"
   show (x :: xs) =  show x ++ ", " ++ show xs
 
 
 -- TODO return Maybe Just, instead of Nil if can't find 
 -- indexed from 0
 index : Nat -> Item -> Item
-index i Nil = Nil                     -- bad, should be Nothing? Actually depends...
+
 index Z     a = a 
 index (S i) (x :: xs) = index i xs
-index i (L  xs ) = index i xs
 
+index Z     (L  x xs ) = x 
+index (S i) (L  x xs ) = index i xs 
+{-
+  case i of 
+    Z => x  
+    _ => index i xs 
+-}
 
 -- drill into structure using path
 locate : List Nat -> Item -> Item
@@ -33,7 +40,9 @@ main : IO ()
 main = do
 
   -- e = ((1 3) (4 (5 6))).
-  let e =  L ( C 1 :: C 3 ) :: L ( C 4 :: L ( C 5 :: C 6 ) )  
+  -- let e =  L ( 1 :: 3 :: Nil ) :: L ( 4 :: L ( 5 :: 6 :: Nil ) :: Nil )  
+  let e =  L ( 1 :: 3 :: Nil ) :: L ( 4 :: L ( 5 :: 6 :: Nil ) :: Nil )  
+  let e =  1 :: 3 :: Nil 
   putStrLn $ show e
 
   putStrLn "-----"
