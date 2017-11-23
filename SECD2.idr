@@ -45,40 +45,38 @@ Show Code where
 
 
 
-
-
 data Item : Type where
-  Nil   : Item        -- having this allows us to use ordinar [] syntax 
-  (::)  : Item -> Item -> Item
-
   C     : Integer -> Item
-  L     : Item -> Item
-
-
--- can change this to take an Integer only
--- Or use L as a L constructor
+  L     : List Item -> Item
 
 Show Item where
-  show (x :: xs) =  show x ++ ", " ++ show xs
-  show Nil       = "Nil"
   show (C val)   = "C " ++ show val
-  -- show (L val)   = "(L " ++ show val ++ ")"
-  show (L val)   = "(" ++ show val ++ ")"
+  show (L val)   = show val
 
 
+-- so have to have a special cons operator
+cons : Item -> Item -> Item 
+cons x xs = case xs of
+  L lst => L (x :: lst)
+  C val => L $ [ x , C val ] -- may not even need 
 
--- LODO return Maybe Just, instead of Nil if can't find 
--- indexed from 0
+
+(::) : Item -> Item -> Item 
+(::) = cons
+
+
 index : Nat -> Item -> Item
-index (S i) (x :: xs)  = index i xs
-index Z     (x :: xs)  = x
-index Z     (C val)    = C val
-index Z     Nil        = Nil 
-index i     (L val)    = index i val
+index (S i) (L $ x :: xs)  = 
+  case List.index' i xs of
+    Just val => val 
 
--- drill into structure using path
+index Z  (L $ x :: xs)  = x
+index Z  (C val)        = C val
+
 locate : List Nat -> Item -> Item
 locate path val = foldl (flip index) val path
+
+
 
 
 
@@ -105,14 +103,22 @@ eval (s, e, (LD path ) :: c ) =  eval ( locate path e :: s, e, c )   -- load env
 
 -- Thus, the expression (car (cons x y)) evaluates to x, and (cdr (cons x y)) evaluates to y.
 
+-- index (S i) (L $ x :: xs)  = 
+
 eval (s, e, OP op ::cs) =
-  let (C a :: C b :: s') = s
+  case s of  
+    L (C a :: C b :: s') => eval ( C (a + b) ::  L s', e, cs ) 
+{-
+
+  -- let L (C a :: C b :: s') = s
+a + b ::
+  let (L $ C a :: C b :: s') = s
       val = case op of
         "+" => a + b
         "*" => a * b
   in
-  eval ( C val :: s', e, cs)
-
+  eval ( s, e, cs)
+-}
 
 -- the car operation returns the first element of the list, while cdr returns the rest of the list. cons.
 -- Does op really evaluate something?  shouldn't it be apply?
@@ -125,7 +131,7 @@ main : IO ()
 main = do
 
   let codes =  [ LDC 3, LDC 2, LDC 6, OP "+", OP "*" ]
-  let ret = eval (Nil, Nil, codes )
+  let ret = eval ( L Nil, L Nil, codes )
   putStrLn $ show ret
 
 
@@ -135,7 +141,9 @@ main = do
   -- SO WE NEED THE Nils TO destructure properly.
   -- let e =  L ( C 1 :: C 3 ) :: L ( C 4 :: L ( C 5 :: C 6 ) )  
 
-  let e =  the Item $ [ L [ C 1, C 3 ] , L [ C 4 , L [ C 5 , C 6 ] ]  ] 
+  -- let e =  the Item $ [ L [ C 1, C 3 ] , L [ C 4 , L [ C 5 , C 6 ] ]  ] 
+
+  let e = the Item $ L [  L [ C 1, C 3 ] , L [ C 4 , L [ C 5 , C 6 ] ]  ]  
   putStrLn $ show e
 
 

@@ -1,8 +1,7 @@
 {-
   This prevents us creating an invalid structure without Nil
   
-  But we cannot just cons onto the list
-  instead must use L (x :: xs )
+  But we need to write our own cons'ing operator
 -}
 
 data Item : Type where
@@ -18,7 +17,7 @@ Show Item where
 cons : Item -> Item -> Item 
 cons x xs = case xs of
   L lst => L (x :: lst)
-  C val => L $ [ x , C val   ] 
+  C val => L $ [ x , C val ] -- may not even need 
 
 
 (::) : Item -> Item -> Item 
@@ -30,8 +29,8 @@ index (S i) (L $ x :: xs)  =
   case List.index' i xs of
     Just val => val 
 
-index Z     (L $ x :: xs)  = x
-index Z     (C val)    = C val
+index Z  (L $ x :: xs)  = x
+index Z  (C val)        = C val
 
 locate : List Nat -> Item -> Item
 locate path val = foldl (flip index) val path
@@ -48,10 +47,10 @@ main = do
   putStrLn "-----"
 
 
-  printLn $ C 1 :: C 2 :: e 
+  printLn $ the Item $ C 1 :: C 2 :: e 
+  printLn $ the Item $ C 1 :: C 2 :: L Nil  
   putStrLn "-----"
 
-  -- let j =  cons (C 1)  e 
 
   putStrLn $ show $ locate [ 0 ] e       -- L 1,3   -- correct 
   putStrLn $ show $ locate [ 0, 0 ] e    -- expect 1 
