@@ -64,9 +64,20 @@ Show Item where
 -- indexed from 0
 index : Nat -> Item -> Item
 index i Nil = Nil                     -- bad, should be Nothing? Actually depends...
-index Z     (x :: xs) = x
+-- index Z     (x :: xs) = x
+-- index Z     (L xs) = L xs
+
+-- index Z     a    = a 
+-- index Z     ( x :: xs) = x 
+index Z     a = a 
+
 index (S i) (x :: xs) = index i xs
-index i     (L xs) = index i xs
+-- index (S i) (L  xs ) = index i xs
+index i (L  xs ) = index i xs
+
+-- perhaps 0 should match the list. 1 should match first item, 2 second item...
+
+-- this is all hopeless...
 
 -- drill into structure using path
 locate : List Nat -> Item -> Item
@@ -114,25 +125,26 @@ main = do
   let ret = eval (Nil, Nil, codes )
   putStrLn $ show ret
 
-  let codes' = LD [ 1 ] :: Nil
 
-  putStrLn $ show codes'
-
+  putStrLn "-----"
   -- e = ((1 3) (4 (5 6))).
-  let e =  L ( C 3 :: C 3 ) :: L ( C 4 :: L ( C 5 :: C 6 ) )  
-
+  let e =  L ( C 1 :: C 3 ) :: L ( C 4 :: L ( C 5 :: C 6 ) )  
   putStrLn $ show e
 
-  -- doesn't look right
-  -- why is it showing just the single value?
+  -- ugghhh it drilled into the value... 
+  -- it's not working...
+  -- let ret = eval (Nil, e, [ LD [ 1 ] ] )
+  -- putStrLn $ show ret
 
-  -- it's not matching in show- because
-  let j = Main.index 2 e
-  putStrLn $ show j
+  putStrLn "-----"
+  -- putStrLn $ show $ locate [ 1, 1, 0 ] e
+  putStrLn $ show $ locate [ 1, 1 ] e    -- ok (C 5, C 6)    or should it be L (C 5, C 6)
+  putStrLn $ show $ locate [ 1, 1, 1 ] e    -- ok C 6    
+  putStrLn $ show $ locate [ 1, 1, 0 ] e    -- expect C 5   , got  (C 5, C 6) 
+  putStrLn $ show $ locate [ 0, 0 ] e    -- expect C 1      , got (C 1, C 3), (C 4, (C 5, C 6))  
 
-  putStrLn "hi"
 
-
+  -- so it's not working properly... to drill down...
 
 
   -- Env : Integer -> Env
