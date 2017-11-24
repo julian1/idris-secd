@@ -2,6 +2,8 @@
   This prevents us creating an invalid structure without Nil on rhs, or with Nil somewhere else
   
   But we have to write our own cons'ing operator
+
+  And then we cannot deconstruct using that operator...
 -}
 
 data Item : Type where

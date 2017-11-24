@@ -93,16 +93,16 @@ eval (s, e, LDC val:: c) = eval ( C val :: s, e, c )   -- load constant on stack
 
 eval (s, e, (LD path ) :: c ) =  eval ( locate path e :: s, e, c )   -- load env on stack
 
-eval (s, e, OP op ::cs) =
+eval (s, e, OP op :: c) =
   case s of  
-    L (C a :: C b :: s') => eval ( C (a + b) ::  L s', e, cs ) 
+    L (C a :: C b :: s') => eval ( C (a + b) ::  L s', e, c) 
 
 
--- this whole destructuring thing is not very nice 
+-- this whole destructuring thing - needing L is not very nice 
 
--- it would be so much nicer if it was just a list...
+-- it would be so much nicer if we could work without the L ...
 
-eval ( L ( (L lst) :: s), e, CAR :: c) = eval (  L s, e, c )   -- load constant on stack
+eval ( L $ (L $ x :: xs) :: s, e, CAR :: c) = eval (  L $ x :: s, e, c )   -- load constant on stack
 
 {-
   case s of  
