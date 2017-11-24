@@ -98,9 +98,11 @@ eval (s, e, OP op ::cs) =
     L (C a :: C b :: s') => eval ( C (a + b) ::  L s', e, cs ) 
 
 
--- this whole thing
+-- this whole destructuring thing is not very nice 
 
-eval ( L (lst ::  s), e, CAR :: c) = eval (  L s, e, c )   -- load constant on stack
+-- it would be so much nicer if it was just a list...
+
+eval ( L ( (L lst) :: s), e, CAR :: c) = eval (  L s, e, c )   -- load constant on stack
 
 {-
   case s of  
