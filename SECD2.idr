@@ -53,7 +53,7 @@ Show Item where
   show (C val)   = "C " ++ show val
   show (L val)   = show val
 
-
+{-
 -- so have to have a special cons operator
 cons : Item -> Item -> Item 
 cons x xs = case xs of
@@ -63,7 +63,7 @@ cons x xs = case xs of
 
 (::) : Item -> Item -> Item 
 (::) = cons
-
+-}
 
 index : Nat -> Item -> Item
 index (S i) (L $ x :: xs)  = 
@@ -89,12 +89,12 @@ eval : (Item, Item, List Code)  -> (Item, Item, List Code)
 
 eval (s, e, Nil) = (s, e, Nil )                       -- no more c - finish
 
-eval (s, e, LDC val:: c) = eval ( C val :: s, e, c )   -- load constant on stack
+eval (L s, e, LDC val:: c) = eval ( L $ C val :: s, e, c )   -- load constant on stack
 
-eval (s, e, (LD path ) :: c ) =  eval ( locate path e :: s, e, c )   -- load env on stack
+eval (L s, e, (LD path ) :: c ) =  eval ( L $ locate path e :: s, e, c )   -- load env on stack
 
 
-eval (L (C a :: C b :: s), e, OP op :: c) = eval ( C (a + b) ::  L s, e, c) 
+eval (L (C a :: C b :: s), e, OP op :: c) = eval ( L $ C (a + b) :: s, e, c) 
 
 
 -- this whole destructuring thing - needing L is not very nice 
