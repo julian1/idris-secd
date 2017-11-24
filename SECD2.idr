@@ -98,6 +98,17 @@ eval (s, e, OP op ::cs) =
     L (C a :: C b :: s') => eval ( C (a + b) ::  L s', e, cs ) 
 
 
+-- this whole thing
+
+eval ( L (lst ::  s), e, CAR :: c) = eval (  L s, e, c )   -- load constant on stack
+
+{-
+  case s of  
+    (L (L ( a :: _ )) :: s') => eval (  L s', e, cs ) 
+-}
+
+
+
 
 -- the car operation returns the first element of the list, while cdr returns the rest of the list. cons.
 -- Does op really evaluate something?  shouldn't it be apply?
@@ -137,7 +148,9 @@ main = do
   putStrLn "-----"
   -- its 
 
-  let codes =  [ LD [ 1, 1] ]
+  -- am not sure if indexing by number rather than count...
+
+  let codes =  [ LD [ 1, 1], CAR  ]
   let ret = eval ( L Nil, e, codes )
   putStrLn $ show ret
 

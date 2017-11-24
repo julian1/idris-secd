@@ -1,7 +1,7 @@
 {-
-  This prevents us creating an invalid structure without Nil
+  This prevents us creating an invalid structure without Nil on rhs, or with Nil somewhere else
   
-  But we need to write our own cons'ing operator
+  But we have to write our own cons'ing operator
 -}
 
 data Item : Type where
