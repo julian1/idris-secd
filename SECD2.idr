@@ -96,7 +96,11 @@ eval (L s, e, LDC val:: c) = eval ( L $ C val :: s, e, c )   -- load constant on
 eval (L s, e, (LD path ) :: c ) =  eval ( L $ locate path e :: s, e, c )   -- load env on stack
 
 
-eval (L (C a :: C b :: s), e, OP op :: c) = eval ( L $ C (a + b) :: s, e, c)    -- a builtin op
+eval (L (C a :: C b :: s), e, OP op :: c) = 
+  let ret = case op of 
+        "+" => a + b
+        "*" => a * b
+  in eval ( L $ C ret :: s, e, c)    
 
 eval (L $ (L $ x :: xs) :: s, e, CAR :: c) = eval (L $ x :: s, e, c )   -- car
 
@@ -120,14 +124,9 @@ main = do
 
 
   putStrLn "-----"
+
   -- e = ((1 3) (4 (5 6))).
-
-  -- SO WE NEED THE Nils TO destructure properly.
-  -- let e =  L ( C 1 :: C 3 ) :: L ( C 4 :: L ( C 5 :: C 6 ) )  
-
-  -- let e =  the Item $ [ L [ C 1, C 3 ] , L [ C 4 , L [ C 5 , C 6 ] ]  ] 
-
-  let e = the Item $ L [  L [ C 1, C 3 ] , L [ C 4 , L [ C 5 , C 6 ] ]  ]  
+  let e =  the Item $ L [ L [ C 1, C 3 ] , L [ C 4 , L [ C 5 , C 6 ] ]  ] 
   putStrLn $ show e
 
 
