@@ -54,22 +54,14 @@ Show Item where
   show (C val)   = "C " ++ show val
   show (L val)   = show val
 
-{-
--- so have to have a special cons operator
-cons : Item -> Item -> Item 
-cons x xs = case xs of
-  L lst => L (x :: lst)
-  C val => L $ [ x , C val ] -- may not even need 
 
-
-(::) : Item -> Item -> Item 
-(::) = cons
--}
+-- env operations
 
 index : Nat -> Item -> Item
 index (S i) (L $ x :: xs)  = 
   case List.index' i xs of
     Just val => val 
+    -- Nothing...
 
 index Z  (L $ x :: xs)  = x
 index Z  (C val)        = C val
@@ -83,11 +75,8 @@ locate path val = foldl (flip index) val path
 -- it would be so much nicer if we could work without the L ...
 
 
--- we need to write the tools the right way around
 -- s e c d
-
 eval : (Item, Item, List Code)  -> (Item, Item, List Code)
-
 
 eval (s, e, Nil) = (s, e, Nil )                       -- no more c - finish
 
