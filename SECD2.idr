@@ -1,8 +1,9 @@
 {-
   SECD
-  https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
-  http://netzhansa.blogspot.com/2008/09/revisiting-secd-and-power-of-lisp-while.html
 
+  https://webdocs.cs.ualberta.ca/~you/courses/325/Mynotes/Fun/SECD-slides.html
+
+  http://netzhansa.blogspot.com/2008/09/revisiting-secd-and-power-of-lisp-while.html
   http://skelet.ludost.net/sec/
 -}
 
@@ -78,7 +79,8 @@ locate path val = foldl (flip index) val path
 
 
 
-
+-- this whole destructuring thing - needing L is not very nice 
+-- it would be so much nicer if we could work without the L ...
 
 
 -- we need to write the tools the right way around
@@ -94,13 +96,9 @@ eval (L s, e, LDC val:: c) = eval ( L $ C val :: s, e, c )   -- load constant on
 eval (L s, e, (LD path ) :: c ) =  eval ( L $ locate path e :: s, e, c )   -- load env on stack
 
 
-eval (L (C a :: C b :: s), e, OP op :: c) = eval ( L $ C (a + b) :: s, e, c) 
+eval (L (C a :: C b :: s), e, OP op :: c) = eval ( L $ C (a + b) :: s, e, c)    -- a builtin op
 
-
--- this whole destructuring thing - needing L is not very nice 
--- it would be so much nicer if we could work without the L ...
-
-eval (L $ (L $ x :: xs) :: s, e, CAR :: c) = eval (L $ x :: s, e, c )
+eval (L $ (L $ x :: xs) :: s, e, CAR :: c) = eval (L $ x :: s, e, c )   -- car
 
 
 
@@ -115,6 +113,7 @@ eval (L $ (L $ x :: xs) :: s, e, CAR :: c) = eval (L $ x :: s, e, c )
 main : IO ()
 main = do
 
+  -- Example 1. 
   let codes =  [ LDC 3, LDC 2, LDC 6, OP "+", OP "*" ]
   let ret = eval ( L Nil, L Nil, codes )
   putStrLn $ show ret
@@ -141,11 +140,9 @@ main = do
 
 
   putStrLn "-----"
-  -- its 
 
-  -- am not sure if indexing by number rather than count...
-
-  let codes =  [ LD [ 1, 1], CAR  ]
+  -- Example 2
+  let codes =  [ LD [ 1, 1], CAR , LD [ 0, 0 ], OP "+" ]
   let ret = eval ( L Nil, e, codes )
   putStrLn $ show ret
 
