@@ -41,6 +41,7 @@ data AExpr : Type where
 
 -- IMPORTANT - TODO if expr includes a label then decimal format. else hex format.
 -- use show instead
+-- 
 humanE : AExpr -> String
 humanE expr = case expr of
   Symbol sym  => sym
@@ -66,7 +67,8 @@ data OpCode : Type where
   POP     : OpCode
 
   -- dup and swap could/should also use AExpr? but need to check widths...
-  -- lets leave for moment. point is that they're separate opcode numbers...
+  -- lets leave for moment. point is that they're separate opcodes with op-code numbers...
+  -- and the symbols should reflect that
   DUP     : Integer -> OpCode
   SWAP    : Integer -> OpCode
 
@@ -94,6 +96,7 @@ data OpCode : Type where
   ADDRESS  : OpCode
   BALANCE   : OpCode
 
+  -----------
   -- Non Opcodes. That can be embedded
 
   -- allow injecting raw data

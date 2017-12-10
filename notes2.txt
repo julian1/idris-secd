@@ -1,0 +1,18 @@
+
+instructions can be executable and not just symbolic. This is probably required to encode the effect of the VM 
+eg.
+then we have types encoding effects on the vm 
+
+run : Vm -> Insn -> Vm
+
+
+
+And we can use g.f like composition for instructions. we don't need to treat them as a list.
+
+AND - if we use a type - then we can pattern match - to restructure. if we want.
+
+But also OpCodes can be separate from the Insn function. eg. can model like this,
+
+Vm -> Insn Op -> Vm 
+plus vm (Insn "ADD" ) = ...
+
