@@ -38,9 +38,9 @@ main = do
 
   -- precedence is around the wrong way???
 
+  -- Ok this composes in the right direction....
 
-  -- let ret = (Initial ) . (ADD) . (ADD) 
-  let ret = (Initial ) & (ADD) & (ADD) 
+  let ret = (Initial  & ADD & ADD ) 
 
 
   printLn "hi"
