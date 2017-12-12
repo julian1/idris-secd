@@ -14,15 +14,19 @@ import Assembler
 
 infixl 7 &
 
+-- some stack representation
+-- ok, this is now the composition function
+-- this is a type or a
+-- mapend...
+
+
 -- this isn't a Vm it's a Vm and state transition. 
 data Vm : Type where
   -- Nil or identity
   Nil : Vm
-  -- some stack representation
-  -- ok, this is now the composition function
-  -- this is a type or a
-  -- mapend...
   Dot : Vm -> OpCode -> Vm
+
+-- maybe this needs to be the other way around -  Opcode ->  Vm -> 
 
 
 -- what does this mean...
@@ -35,7 +39,8 @@ human : Vm -> String
 human Nil = "whoot" 
 -- human vm  = case vm of
 --              ((Dot) _ _ ) => "whoot" 
--- human ((Dot) vm1 ADD vm2) = "whoot" 
+
+human (Dot _ _) = "whoot" 
 
 
 (&) : Vm -> OpCode -> Vm
