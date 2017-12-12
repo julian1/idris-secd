@@ -3,27 +3,26 @@ import Assembler
 
 infixl 7 &
 
--- some stack representation
--- ok, this is now the composition function
--- this is a type or a
--- mapend...
 
+-- 1. a structure - that can be destructured - and manipulated and printed
+-- 2. an evaluation function - necessary
+-- 3. 
 
 -- this isn't a Vm it's a Vm and state transition.
 data Vm : Type where
   NIL : Vm
-  DOT : (Vm -> OpCode -> Nat ) -> Vm -> Vm
+  DOT : (Vm -> OpCode -> Nat ) ->  Vm -> OpCode  -> Vm
 
 
 
 human : Vm -> String
 human NIL     = "whoot"
-human (DOT f a) = "dot " ++ human a
+human (DOT f a op) = "dot " ++ human a
 
 
 
 expr : Vm
-expr = DOT (\vm, op => 123) $ NIL
+--expr = DOT (\vm, op => 123) $ NIL
 
 
 
@@ -31,7 +30,7 @@ expr = DOT (\vm, op => 123) $ NIL
 -- expr = NIL
 
 -- OK with a function then we can destructure it...
--- But we can't match 
+-- But we can't match
 
 -- NIL or identity
 -- Dot : Vm -> OpCode -> Vm
