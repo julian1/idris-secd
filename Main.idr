@@ -1,18 +1,18 @@
 
 {-
   This is just the same as 1 :: 2 :: Nil  and is fine.
-  let ret = Nil & ADD & ADD 
+  let ret = Nil Dot ADD Dot ADD 
 
-  But why can't we match on (&). Perhaps there's something else needed...
+  But why can't we match on (Dot). Perhaps there's something else needed...
 -}
 -- example using the opcodes and composition functions 
 -- op codes and composition 
 
--- probably just need (&) 
+-- probably just need (Dot) 
 
 import Assembler 
 
-infixl 7 & 
+-- infixl (&) Dot 
 
 -- this isn't a Vm it's a Vm and state transition. 
 data Vm : Type where
@@ -22,20 +22,20 @@ data Vm : Type where
   -- ok, this is now the composition function
   -- this is a type or a
   -- mapend...
-  (&) : Vm -> OpCode -> Vm
+  Dot : Vm -> OpCode -> Vm
 
 
 -- what does this mean...
-(&) vm ADD = vm
-(&) vm SUB = vm
-(&) vm (PUSH1 val) =  vm
+Dot vm ADD = vm
+Dot vm SUB = vm
+Dot vm (PUSH1 val) =  vm
 
 
 human : Vm -> String
 human Nil = "whoot" 
 -- human vm  = case vm of
---              ((&) _ _ ) => "whoot" 
--- human ((&) vm1 ADD vm2) = "whoot" 
+--              ((Dot) _ _ ) => "whoot" 
+-- human ((Dot) vm1 ADD vm2) = "whoot" 
 
 
 
@@ -48,9 +48,9 @@ main = do
 
   -- the thing is - that this entire expression is evaluated...
   -- is that what we want? 
-  -- let ret = (\x => x) & ADD & ADD 
+  -- let ret = (\x => x) Dot ADD Dot ADD 
 
-  let ret = Nil & ADD & ADD 
+  let ret = Nil Dot ADD Dot ADD 
 
   printLn "hi"
 
