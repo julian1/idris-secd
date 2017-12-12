@@ -12,13 +12,23 @@ infixl 7 &
 -- this isn't a Vm it's a Vm and state transition.
 data Vm : Type where
   NIL : Vm
-  DOT : (Vm -> OpCode ) -> Vm -> Vm
+  DOT : (Vm -> OpCode -> Nat ) -> Vm -> Vm
 
 
 
 human : Vm -> String
 human NIL     = "whoot"
-human (DOT (f ) l ) = "whoot"
+human (DOT f a) = "dot " ++ human a
+
+
+
+expr : Vm
+expr = DOT (\vm, op => 123) $ NIL
+
+
+
+
+-- expr = NIL
 
 -- OK with a function then we can destructure it...
 -- But we can't match 
