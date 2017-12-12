@@ -12,7 +12,7 @@
 
 import Assembler 
 
--- infixl (&) Dot 
+infixl 7 &
 
 -- this isn't a Vm it's a Vm and state transition. 
 data Vm : Type where
@@ -38,6 +38,9 @@ human Nil = "whoot"
 -- human ((Dot) vm1 ADD vm2) = "whoot" 
 
 
+(&) : Vm -> OpCode -> Vm
+(&) = Dot
+
 
 -- we should be able to compose something together that can be matched... 
 -- and
@@ -50,7 +53,7 @@ main = do
   -- is that what we want? 
   -- let ret = (\x => x) Dot ADD Dot ADD 
 
-  let ret = Nil Dot ADD Dot ADD 
+  let ret = Nil & ADD & ADD 
 
   printLn "hi"
 
