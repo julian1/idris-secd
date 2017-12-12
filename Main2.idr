@@ -1,7 +1,7 @@
 
 import Assembler
 
-infixr 7 &
+infixl 7 &
 
 
 -- 1. a structure - that can be destructured - and manipulated and sugar printed
@@ -21,14 +21,15 @@ human NIL          = "whoot"
 human (DOT op a ) = "dot " ++ human a
 
 
-(&) : OpCode -> Vm -> Vm
-(&) = DOT
+(&) : Vm -> OpCode -> Vm
+(&) a b = DOT b a  -- swap
 
 
 expr : Vm
 -- expr = DOT (\vm, op => 123) ADD NIL
 -- expr = DOT ADD $ DOT  ADD NIL
-expr = ADD & ADD & NIL
+-- expr = ADD & ADD & NIL -- works!
+expr = NIL & ADD & ADD 
 
 
 main : IO ()
