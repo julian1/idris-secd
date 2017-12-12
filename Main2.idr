@@ -25,11 +25,12 @@ human (DOT op a ) = "dot " ++ human a
 
 expr : Vm
 -- expr = DOT (\vm, op => 123) ADD NIL
-expr = DOT  ADD NIL
+expr = DOT ADD $ DOT  ADD NIL
 
 
 main : IO ()
---main = 
+main = 
+  printLn . human $ expr
 
 
 {-
