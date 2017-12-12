@@ -11,19 +11,21 @@ infixl 7 &
 -- this isn't a Vm it's a Vm and state transition.
 data Vm : Type where
   NIL : Vm
-  DOT : (Vm -> OpCode -> Nat ) ->  OpCode -> Vm -> Vm
+  -- DOT : (Vm -> OpCode -> Nat ) ->  OpCode -> Vm -> Vm
+  DOT :  OpCode -> Vm -> Vm
 
 
 
 human : Vm -> String
 human NIL          = "whoot"
-human (DOT f a op) = "dot " ++ human a
+human (DOT op a ) = "dot " ++ human a
 
 
 
 
 expr : Vm
-expr = DOT (\vm, op => 123) ADD NIL
+-- expr = DOT (\vm, op => 123) ADD NIL
+expr = DOT  ADD NIL
 
 
 main : IO ()
