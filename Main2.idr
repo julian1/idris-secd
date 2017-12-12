@@ -4,9 +4,9 @@ import Assembler
 infixl 7 &
 
 
--- 1. a structure - that can be destructured - and manipulated and printed
+-- 1. a structure - that can be destructured - and manipulated and sugar printed
 -- 2. an evaluation function - necessary
--- 3. 
+-- 3. can do type level checks 
 
 -- this isn't a Vm it's a Vm and state transition.
 data Vm : Type where
@@ -21,12 +21,20 @@ human (DOT f a op) = "dot " ++ human a
 
 
 
+
 expr : Vm
 expr = DOT (\vm, op => 123) ADD NIL
 
 
+main : IO ()
+--main = 
 
 
+{-
+eval : Vm -> Integer
+eval NIL          = 0 
+eval (DOT f a op) = f (eval a) op
+-}
 -- expr = NIL
 
 -- OK with a function then we can destructure it...
