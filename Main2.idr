@@ -1,4 +1,8 @@
 
+-- OK - it really should be possible to handle a secd environment this way also...
+-- cleaner way to express - than using lists...
+-- we can add typing constraints to the behavior of the VM 
+
 import Assembler
 
 infixl 7 &
@@ -10,6 +14,8 @@ infixl 7 &
 
 -- this isn't a Vm it's a Vm and state transition.
 
+-- since the assembler opcodes are defined before here. we can restructure this
+
 data Vm : Type where
   NIL : Vm                    -- call it start? or have a symbol opCode?
   (&) : Vm -> OpCode -> Vm
@@ -17,8 +23,8 @@ data Vm : Type where
 
 
 human : Vm -> String
-human NIL        = "whoot"
-human ((&) a op) = "dot " ++ human a
+human NIL        = "nil"
+human ((&) a op) = human a ++ "dot " 
 
 
 expr : Vm
@@ -28,10 +34,13 @@ expr =
   & ADD 
   & ADD
 
+-- if we're going to concat insns around then we will a concat
 
+-- 
 eval : Vm -> Integer
 eval NIL = 0
 eval ((&) e ADD) = eval e
+eval ((&) e SUB) = eval e
 
 
 main : IO ()
