@@ -45,22 +45,11 @@ index Z     (L x)           = x
 index Z     x               = x 
 
 
--- index Z     (L $ x :: _) = x  
--- index Z  (L x)      = x 
---index Z  (L $ x :: xs)         = x  --  not sure... this isn't being matched - because it's actuall L (::) 
--- where we drill into a list is weirddd
 
 -- ok - this has to change to support drilling in...
 locate : List Nat -> Item -> Item
 locate path val = foldl (flip index) val path
 
-
-
--- index Z  (L $ x :: xs)  = x
---  case List.index' i xs of
---    Just val => val 
--- TODO Nothing... must handle
--- index Z  (C val)        = C val
 
 
 j : Item
@@ -69,7 +58,6 @@ j = (C 123) :: (C 456)
 l : Item
 l = (C 123) :: NIL  
 
-
 k : Item 
 k = C 123 :: (L $ NIL :: NIL ) :: C 789
 
@@ -77,48 +65,35 @@ m : Item
 m = C 123 :: (L $ NIL :: C 123 ) :: C 789
 
 
-{-
-
-assertEqual : Item  -> Item  -> Nat
-assertEqual x y = case x == y of
-  True => 123
-
-  -- runtime error
-
--}
-
-
-{-
-%access export
-
-allTests : IO ()
-allTests = runTests (MkTestFixture "Protobuf" [
-  MkTestCase "GetName" (assertEq (getName John) "John Doe"),
-  MkTestCase "GetId" (assertEq (getId John) 1234),
-  MkTestCase "GetEmail" (assertEq (getEmail John) (Just "jdoe@example.com"))
-])
--}
-
-
 main : IO ()
 main = do
-  -- destructuring works 
-  -- let (C a :: (L $ C b :: d  ) :: C c ) = k 
-  -- printLn $ "hi " ++ show b
 
   assertEquals k k 
+  assertNotEquals k m 
+
+  assertEquals (index 0 k) k 
+  assertEquals (index 1 k) $ NIL :: NIL
+  assertEquals (index 2 k) $ C 789
+
+  assertEquals (locate [0] k) k 
+  assertEquals (locate [1,0] k) $ NIL :: NIL
+  assertEquals (locate [1,1] k) $ NIL 
+
+
+  {-
+  -- destructuring works 
+  let p = case k of 
+            --             (C a :: (L $ NIL :: b  ) :: C c ) => a --(a,b,c)
+            C x => x
+  -}
+
 
   printLn k
 
-  -- printLn $ assertEqual k m
 
-  printLn $ "---" 
-  printLn $ index 0 k 
-  printLn $ index 1 k 
-  printLn $ index 2 k 
 
-  printLn $ "---" 
-  printLn $ locate [1,0] k 
+
+
 
 -- this is a concern. - no a double NIL is correct... because one is the list for L and the other is the :: continuation
 
@@ -144,5 +119,16 @@ mutual
 
 
 
+
+-- index Z     (L $ x :: _) = x  
+-- index Z  (L x)      = x 
+--index Z  (L $ x :: xs)         = x  --  not sure... this isn't being matched - because it's actuall L (::) 
+-- where we drill into a list is weirddd
+
+-- index Z  (L $ x :: xs)  = x
+--  case List.index' i xs of
+--    Just val => val 
+-- TODO Nothing... must handle
+-- index Z  (C val)        = C val
 
 
