@@ -23,20 +23,29 @@ expr' = ADD & NIL
 
 
 -- isns have to be reversed... because of operand order - which is really hard to read...
+-- although we could use a list and then build it using
 expr : Vm
-expr = 
+expr =
     ADD 
   & ADD
   & (PUSH1 $ Literal 0x01) 
   & NIL 
 
 
-{-
+expr'' : Vm
+expr'' = foldl (flip (&)) NIL 
+  [ 
+  (PUSH1 $ Literal 0x01), 
+  ADD, 
+  ADD
+  ]
+
+-- OK - HANG ON - I THINK WE"VE GOT IT WRONG - 
+-- the head should be the first operation....
+-- and printing should reflect that.
+
 mappend : Vm -> Vm -> Vm 
-mappend c NIL = c
-mappend NIL c = c
-mappend x ((&) e' op') = x & e'
--}
+-- mappend c c1 = foldl (\x,y => (&) y x) c c1 
 
 
 -- if we're going to concat insns around then we will a concat
@@ -45,12 +54,15 @@ mappend x ((&) e' op') = x & e'
 eval : Vm -> Integer
 eval NIL = 0
 eval ((&) ADD e) = eval e
-eval ((&) SUB e ) = eval e
+eval ((&) SUB e) = eval e
 
 
 main : IO ()
-main =
+main = do
   printLn .human $ expr
+
+
+  printLn .human $ expr''
 
 
 
