@@ -1,17 +1,20 @@
--- t x t x t x
--- OK. including NIL makes it more complicate. we should have a different operator...
--- ahh - and we *do* want to have a nil anywhere
--- NIL can be the starting value
 
--- WE WANT a NIL to be able to be anywhere. allows NIL or LIst or sublist.
--- but it would be nice if could enforce it at the end of a list...
--- it's no
+{-
+  - WE WANT a NIL to be able to be placed anywhere. allows NIL or LIst or sublist.
+  but it would be nice if could enforce it at the end of a list...
+
+  - THE BIG CONFUSION is thinking that (::) is the middle, rather than the lhs/top...
+  - ALSO VERY IMPORTANT (::) is *not* concat. or mappend.  it's just cons if we want this we have to 
+-}
+
+module Env
 
 -- https://github.com/jfdm/idris-testing/
 import Test.Assertions
 import Test.Utils
 
 
+%access public export
 
 data Item : Type where
   (::)  : Item -> Item -> Item
@@ -36,7 +39,6 @@ Eq Item where
 
 
 
--- THE BIG CONFUSION is thinking that (::) is the middle, rather than the lhs/top...
 
 index : Nat -> Item -> Item
 index (S i) ((::) _  xs)    = index i xs
@@ -45,11 +47,13 @@ index Z     (L x)           = x
 index Z     x               = x 
 
 
-
--- ok - this has to change to support drilling in...
+-- drill down into env
 locate : List Nat -> Item -> Item
 locate path val = foldl (flip index) val path
 
+
+-- Tests
+%access private
 
 
 j : Item
@@ -65,8 +69,10 @@ m : Item
 m = C 123 :: (L $ NIL :: C 123 ) :: C 789
 
 
-main : IO ()
-main = do
+
+-- This can be called with Env.runTests even though it's private
+runTests: IO ()
+runTests = do
 
   assertEquals k k 
   assertNotEquals k m 
@@ -80,55 +86,10 @@ main = do
   assertEquals (locate [1,1] k) $ NIL 
 
 
-  {-
   -- destructuring works 
-  let p = case k of 
-            --             (C a :: (L $ NIL :: b  ) :: C c ) => a --(a,b,c)
-            C x => x
-  -}
+  assertEquals 
+    (case k of (C a :: (L $ NIL :: b  ) :: C c ) => (a,b,c) )
+    (123, NIL, 789) 
 
-
-  printLn k
-
-
-
-
-
-
--- this is a concern. - no a double NIL is correct... because one is the list for L and the other is the :: continuation
-
--- Ahhh it doesn't work because it's not consing....
--- because . lhs of cons must be an integer...
--- and this can never resolve 
-
--- VERY IMPORTANT (::) is *not* concat. or mappend.  if we want this we have to 
--- write it.
-
--- but we can't use (::) to append a sublist - because (::) only accepts an Integer argument...
--- So it has to be an Either Integer or an Item type... basically...
-
--- So - I think it has to be like a tree (T a b) 
-
-{-
-data X : Type where
--- this works but then we don't even need NIL... except to be able to match...
-  L     : Item -> X 
-  C     : Integer -> X 
-mutual 
--}
-
-
-
-
--- index Z     (L $ x :: _) = x  
--- index Z  (L x)      = x 
---index Z  (L $ x :: xs)         = x  --  not sure... this isn't being matched - because it's actuall L (::) 
--- where we drill into a list is weirddd
-
--- index Z  (L $ x :: xs)  = x
---  case List.index' i xs of
---    Just val => val 
--- TODO Nothing... must handle
--- index Z  (C val)        = C val
-
+  pure ()
 
