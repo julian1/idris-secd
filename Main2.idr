@@ -10,7 +10,7 @@
 
 import Assembler
 
-infixl 7 &
+infixr 7 &
 
 
 
@@ -39,12 +39,13 @@ expr'' : Vm
 expr'' = ADD & ADD & NIL
 -} 
 
+-- isns have to be reversed... because of operand order - which is really hard to read...
 expr : Vm
 expr = 
-  NIL 
-  & (PUSH1 $ Literal 0x01) 
-  & ADD 
+    ADD 
   & ADD
+  & (PUSH1 $ Literal 0x01) 
+  & NIL 
 
 
 {-
@@ -60,8 +61,8 @@ mappend x ((&) e' op') = x & e'
 -- 
 eval : Vm -> Integer
 eval NIL = 0
-eval ((&) e ADD) = eval e
-eval ((&) e SUB) = eval e
+eval ((&) ADD e) = eval e
+eval ((&) SUB e ) = eval e
 
 
 main : IO ()
