@@ -1,43 +1,26 @@
 {-
-    Ok, the thing is if we switch to using this code,
-    then a bunch of assembly stuff has to change as well...
-
-    
--}
--- OK - it really should be possible to handle a secd environment this way also...
--- cleaner way to express - than using lists...
--- we can add typing constraints to the behavior of the VM 
+    example shows 'normal' list consing... and matching
+-} 
 
 import Assembler
 
 infixr 7 &
 
 
-
-
 data Vm : Type where
   NIL : Vm                    -- call it start? or have a symbol opCode?
-  -- (&) : Vm -> OpCode -> Vm    -- should this be around the other way?
-                              -- because that would be normal for a cons operator...
   (&) : OpCode -> Vm -> Vm    
 
 
 
 human : Vm -> String
 human NIL        = "nil"
-human ((&) op xs ) = human xs ++ "dot " 
+human ((&) op xs ) = human xs ++ " " ++ human op
 
 
--- OK - this doesn't work is correct with, 'infixr 7 &'
 expr' : Vm
-expr' = (ADD & NIL)
+expr' = ADD & NIL
 
-
-{-
--- OK - this is correct with, 'infixr 7 &'
-expr'' : Vm
-expr'' = ADD & ADD & NIL
--} 
 
 -- isns have to be reversed... because of operand order - which is really hard to read...
 expr : Vm
