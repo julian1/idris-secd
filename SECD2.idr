@@ -45,7 +45,9 @@ Show Code where
   show (OP op) = "OP " ++ op
 
 
+--- env
 
+{-
 data Item : Type where
   C     : Integer -> Item
   L     : List Item -> Item
@@ -53,6 +55,23 @@ data Item : Type where
 Show Item where
   show (C val)   = "C " ++ show val
   show (L val)   = show val
+-}
+
+
+
+data Item : Type where
+  (::)  : Item -> Item -> Item
+  C     : Integer -> Item         -- change to Nat? 
+  L     : Item -> Item
+  NIL   : Item
+
+
+Show Item where
+  show ((::) x y)  = show x ++ ", " ++ show y
+  show NIL       = "NIL"
+  show (C val)   = "C " ++ show val
+  show (L val)   = "(L " ++ show val ++ ")"
+
 
 
 -- env operations
