@@ -21,7 +21,17 @@ Show Item where
   show (L val)   = "(L " ++ show val ++ ")"
 
 
--- THE BIG CONFUSION is thinking that (::) is second, rather than on top...
+{-
+Eq Int where
+(==) = boolOp prim__eqInt
+-}
+
+Eq Item where
+  -- (==) = (C val) (C val) = True
+  (==) x y  = True
+
+
+-- THE BIG CONFUSION is thinking that (::) is the middle, rather than the lhs/top...
 
 index : Nat -> Item -> Item
 index (S i) ((::) _  xs)    = index i xs
@@ -59,6 +69,10 @@ k : Item
 -- k = C 123 :: (L $ C 456 :: C 765 ) :: C 789
 k = C 123 :: (L $ NIL :: NIL ) :: C 789
 
+
+myassert : Item  -> Item  -> Nat
+myassert x y = case x == y of
+                  True => 1
 
 
 main : IO ()
