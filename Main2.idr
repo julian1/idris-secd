@@ -1,4 +1,9 @@
+{-
+    Ok, the thing is if we switch to using this code,
+    then a bunch of assembly stuff has to change as well...
 
+    
+-}
 -- OK - it really should be possible to handle a secd environment this way also...
 -- cleaner way to express - than using lists...
 -- we can add typing constraints to the behavior of the VM 
@@ -18,7 +23,8 @@ infixl 7 &
 
 data Vm : Type where
   NIL : Vm                    -- call it start? or have a symbol opCode?
-  (&) : Vm -> OpCode -> Vm
+  (&) : Vm -> OpCode -> Vm    -- should this be around the other way?
+                              -- because that would be normal for a cons operator...
 
 
 
@@ -33,6 +39,15 @@ expr =
   & (PUSH1 $ Literal 0x01) 
   & ADD 
   & ADD
+
+
+{-
+mappend : Vm -> Vm -> Vm 
+mappend c NIL = c
+mappend NIL c = c
+mappend x ((&) e' op') = x & e'
+-}
+
 
 -- if we're going to concat insns around then we will a concat
 
