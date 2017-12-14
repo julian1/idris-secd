@@ -73,9 +73,11 @@ m = C 123 :: (L $ NIL :: C 123 ) :: C 789
 
 
 
-myassert : Item  -> Item  -> Nat
-myassert x y = case x == y of
-                  True => 1
+assertEqual : Item  -> Item  -> Nat
+assertEqual x y = case x == y of
+  True => 123
+
+  -- runtime error
 
 
 main : IO ()
@@ -86,7 +88,7 @@ main = do
 
   printLn k
 
-  printLn $ k == m
+  printLn $ assertEqual k m
 
   printLn $ "---" 
   printLn $ index 0 k 
