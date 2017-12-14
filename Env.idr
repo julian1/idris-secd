@@ -21,14 +21,13 @@ Show Item where
   show (L val)   = "(L " ++ show val ++ ")"
 
 
-{-
-Eq Int where
-(==) = boolOp prim__eqInt
--}
-
 Eq Item where
-  -- (==) = (C val) (C val) = True
-  (==) x y  = True
+  (==) (x :: xs) (x' :: xs') = (==) x x' && (==) xs xs'
+  (==) (L x) (L x') = (==) x x'
+  (==) (C x) (C x') = x == x'
+  (==) NIL   NIL = True
+  (==) _ _ = False
+
 
 
 -- THE BIG CONFUSION is thinking that (::) is the middle, rather than the lhs/top...
@@ -66,8 +65,12 @@ l = (C 123) :: NIL
 
 
 k : Item 
--- k = C 123 :: (L $ C 456 :: C 765 ) :: C 789
 k = C 123 :: (L $ NIL :: NIL ) :: C 789
+
+m : Item 
+m = C 123 :: (L $ NIL :: C 123 ) :: C 789
+
+
 
 
 myassert : Item  -> Item  -> Nat
@@ -82,6 +85,8 @@ main = do
   -- printLn $ "hi " ++ show b
 
   printLn k
+
+  printLn $ k == m
 
   printLn $ "---" 
   printLn $ index 0 k 
