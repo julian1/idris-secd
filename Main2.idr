@@ -13,25 +13,31 @@ import Assembler
 infixl 7 &
 
 
--- 1. a structure - that can be destructured - and manipulated and sugar printed
--- 2. an evaluation function - necessary
--- 3. can do type level checks
 
--- this isn't a Vm it's a Vm and state transition.
-
--- since the assembler opcodes are defined before here. we can restructure this
 
 data Vm : Type where
   NIL : Vm                    -- call it start? or have a symbol opCode?
-  (&) : Vm -> OpCode -> Vm    -- should this be around the other way?
+  -- (&) : Vm -> OpCode -> Vm    -- should this be around the other way?
                               -- because that would be normal for a cons operator...
+  (&) : OpCode -> Vm -> Vm    
 
 
 
 human : Vm -> String
 human NIL        = "nil"
-human ((&) a op) = human a ++ "dot " 
+human ((&) op xs ) = human xs ++ "dot " 
 
+
+-- OK - this doesn't work is correct with, 'infixr 7 &'
+expr' : Vm
+expr' = (ADD & NIL)
+
+
+{-
+-- OK - this is correct with, 'infixr 7 &'
+expr'' : Vm
+expr'' = ADD & ADD & NIL
+-} 
 
 expr : Vm
 expr = 
