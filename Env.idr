@@ -7,6 +7,12 @@
 -- but it would be nice if could enforce it at the end of a list...
 -- it's no
 
+-- https://github.com/jfdm/idris-testing/
+import Test.Assertions
+import Test.Utils
+
+
+
 data Item : Type where
   (::)  : Item -> Item -> Item
   C     : Integer -> Item
@@ -71,13 +77,27 @@ m : Item
 m = C 123 :: (L $ NIL :: C 123 ) :: C 789
 
 
-
+{-
 
 assertEqual : Item  -> Item  -> Nat
 assertEqual x y = case x == y of
   True => 123
 
   -- runtime error
+
+-}
+
+
+{-
+%access export
+
+allTests : IO ()
+allTests = runTests (MkTestFixture "Protobuf" [
+  MkTestCase "GetName" (assertEq (getName John) "John Doe"),
+  MkTestCase "GetId" (assertEq (getId John) 1234),
+  MkTestCase "GetEmail" (assertEq (getEmail John) (Just "jdoe@example.com"))
+])
+-}
 
 
 main : IO ()
@@ -86,9 +106,11 @@ main = do
   -- let (C a :: (L $ C b :: d  ) :: C c ) = k 
   -- printLn $ "hi " ++ show b
 
+  assertEquals k k 
+
   printLn k
 
-  printLn $ assertEqual k m
+  -- printLn $ assertEqual k m
 
   printLn $ "---" 
   printLn $ index 0 k 
@@ -119,5 +141,8 @@ data X : Type where
   C     : Integer -> X 
 mutual 
 -}
+
+
+
 
 
