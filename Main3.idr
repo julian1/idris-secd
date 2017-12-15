@@ -1,8 +1,11 @@
 {-
-  OP is second argument. The same as >>= operato
+  OP is second argument. The same as monadic >>= has the contination function as second argument. 
 
-    Ok, the thing is if we switch to using this code,
-    then a bunch of assembly stuff has to change as well...
+  thing is that we have to implement monoid, foldable, etc. for what value.
+   
+  implement foldable - and monid then we should get concat, concatMap etc for free 
+  https://github.com/idris-lang/Idris-dev/blob/master/libs/prelude/Prelude/Foldable.idr
+
 -}
 -- OK - it really should be possible to handle a secd environment this way also...
 -- cleaner way to express - than using lists...
@@ -54,6 +57,10 @@ mappend x ((&) e' op') = x & e'
 -}
 
 
+-- OK - we cant use fold because we don't have it defined for (&) operator...
+-- append : Vm -> Vm -> Vm
+-- append x y = foldl (flip (&)) x y
+ 
 -- if we're going to concat insns around then we will a concat
 
 -- 
@@ -63,14 +70,19 @@ eval ((&) e ADD) = eval e
 eval ((&) e SUB) = eval e
 
 
+
+
 main : IO ()
-main =
+main = do
   printLn .human $ expr
 
-
+  -- we can use the :: operator if we prefer for lists...
+  let j = the (List OpCode) $ ADD :: ADD :: Nil
 
 -- (&) : Vm -> OpCode -> Vm
 -- (&) = DOT
 -- DOT : (Vm -> OpCode -> Nat ) ->  OpCode -> Vm -> Vm
+
+  pure ()
 
 
