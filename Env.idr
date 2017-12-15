@@ -1,10 +1,11 @@
-
 {-
+  Environment for SECD machine.
+
   - WE WANT a NIL to be able to be placed anywhere. allows NIL or LIst or sublist.
   but it would be nice if could enforce it at the end of a list...
 
-  - THE BIG CONFUSION is thinking that (::) is the middle, rather than the lhs/top...
-  - ALSO VERY IMPORTANT (::) is *not* concat. or mappend.  it's just cons if we want this we have to 
+  - THE BIG CONFUSION is thinking that (::) is the middle due to syntax, rather than a tag at the lhs/top of the expr...
+  - ALSO VERY IMPORTANT (::) is *not* concat. or mappend.  it's just ordinary cons 
 -}
 
 module Env
