@@ -1,4 +1,17 @@
 
+{-
+if one wanted to represent a list of instructions for a stck machine/vm - what order would one choose? 
+
+  [ PUSH, PUSH, ADD ] 
+    The in-order for [] and ++/mappend notation. map in order of executtion   
+    [ insn1, insn2 ] ++ [ insn3 ] good
+    map is also good from first to last.
+    same as how a strings are manipulated in haskell.
+
+  [ ADD, PUSH, PUSH ] ?  
+    cons :: makes more sense in terms of cons'ing a new instruction onto head of the last instructions or nil. 
+-}
+
 import Assembler
 
 infixl 7 &
@@ -18,10 +31,11 @@ infixl 7 &
 -- Not sure - it shouldn't be reversed
 
 
--- left fold 
 human'' : List OpCode -> String
-human'' ops = foldl f "" $ map human ops
-  where f op acc = acc ++ ", " ++ op
+human'' ops = foldr f "" ops 
+  where 
+    f : OpCode -> String -> String 
+    f op acc = acc ++ ", " ++ (human op)
 
 
 
@@ -53,6 +67,8 @@ main = do
   -- but its the reverse of haskell strings,
   > 'a' : "pple"
   "apple"
+
+  consing cons's onto the start of a string.
 -}
 
   -- let l = the (List OpCode) $  ( ( Nil & ADD ) & ADD )
