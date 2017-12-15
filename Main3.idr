@@ -1,4 +1,6 @@
 {-
+  OP is second argument. The same as >>= operato
+
     Ok, the thing is if we switch to using this code,
     then a bunch of assembly stuff has to change as well...
 -}
@@ -12,7 +14,7 @@ infixl 7 &
 
 
 -- 1. a structure - that can be destructured - and manipulated and sugar printed
--- 2. an evaluation function - necessary
+-- 2. (maybe) an evaluation function - necessary
 -- 3. can do type level checks
 
 -- this isn't a Vm it's a Vm and state transition.
@@ -25,12 +27,9 @@ infixl 7 &
 
 
 data Vm : Type where
-  NIL : Vm                    -- call it start? or have a symbol opCode?
+  NIL : Vm                    -- return ? call it start? or have a symbol opCode? or more like return
   (&) : Vm -> OpCode -> Vm    -- should this be around the other way?
                               -- because that would be normal for a cons operator...
-
-  -- (&) : OpCode -> Vm -> Vm    -- not sure if this is right ?
-
 
 
 human : Vm -> String
@@ -46,6 +45,7 @@ expr =
   & ADD
 
 
+-- we should be able to do append as a fold
 {-
 mappend : Vm -> Vm -> Vm 
 mappend c NIL = c

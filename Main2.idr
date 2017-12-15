@@ -1,5 +1,8 @@
 {-
     example shows 'normal' list consing... and matching
+    lists have a lot of advantages... we get folds mappend etc without having to .
+
+    OK - hang on a monadic bind puts the function second first.
 -} 
 
 import Assembler
@@ -14,7 +17,7 @@ data Vm : Type where
 
 
 human : Vm -> String
-human NIL        = "nil"
+human NIL          = "nil"
 human ((&) op xs ) = human xs ++ " " ++ human op
 
 
@@ -40,12 +43,16 @@ expr'' = foldl (flip (&)) NIL
   ADD
   ]
 
+{-
+-- we can't use fold because it's not a list...
+
 -- OK - HANG ON - I THINK WE"VE GOT IT WRONG - 
 -- the head should be the first operation....
 -- and printing should reflect that.
 
 mappend : Vm -> Vm -> Vm 
--- mappend c c1 = foldl (\x,y => (&) y x) c c1 
+mappend c c1 = foldl (\x,y => (&) y x) c c1 
+-}
 
 
 -- if we're going to concat insns around then we will a concat
