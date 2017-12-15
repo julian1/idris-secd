@@ -51,7 +51,7 @@ data Expr : Type where
 
   Ops : List OpCode -> Expr
 
-  -- side effects
+  -- side effects - chaining...
   Seq : Expr -> Expr -> Expr
 
   -- log0(p, s)  -   log without topics and data mem[p..(p+s))
@@ -230,10 +230,12 @@ codecopy = CodeCopy
 ops : List OpCode -> Expr 
 ops = Ops
 
+-- this is really just composition. 
+-- not sure we shouldn't be using & or a simple list?
+-- assembly is just a list...
 (>>=) : Expr -> Expr -> Expr 
 (>>=) = Seq
 
--- infixr 7 >> 
 
 
 
@@ -267,34 +269,42 @@ address = Address
 balance : Expr -> Expr
 balance = Balance
 
--- loader : Expr -> Expr 
--- loader = Loader
 
-
---expr : Expr
 
 main : IO ()
 main = do
 
-
   let expr = ifelse 0 (1 + 5) (2 + 2)
 
-
-  printLn . human' . resolve . compile $ expr
+  -- printLn . human' . resolve . compile $ expr
   -- printLn . machine' . resolve $ ops
-
 
   assertEquals (machine' . resolve . compile $ expr ) "600015600E5760056001016014565b60026002015b" 
 
 
   assertEquals 
-    (machine' . resolve $ [ DATA8 $ Plus (Literal 3) (Literal 4) , JUMPDEST, JUMPDEST , ISZERO ])
-    "075b5b15"
+    (machine' . resolve $ [ DATA8 $ Plus (Literal 3) (Literal 4) ])
+    "07"
 
 
+  let ops'' =
+         (compile $ mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee )
+      ++ (compile $ log0 0x00 32)
+      ++ (compile $ return 0x00 32)
+
+
+  -- printLn . machine' . resolve $ ops''
+  -- ok we should test the code works...
+  -- then refactor the separate compile operations...
+
+  assertEquals 
+    (machine' . resolve $ ops'') 
+    "7fEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEE60005260206000a060206000f3"
 
 
   pure ()
+
+
 
   -- https://ropsten.etherscan.io/address/0xf5d27939d55b3dd006505c2fa37737b09ebacd71#code
 
