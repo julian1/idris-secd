@@ -1,11 +1,20 @@
+{-
+  - Ok we want to lock down the code with some tests.
+    before we refactor
 
+-}
 module Expr
+
+-- https://github.com/jfdm/idris-testing/
+import Test.Assertions
+import Test.Utils
+import Debug.Trace
+
 
 -- fully import so we don't have to prefix op-codes
 import Assembler 
 
 
-import Debug.Trace
 
 -- TODO This shouldn't be mixed up here...
 
@@ -283,7 +292,7 @@ expr =
   -- If 0  (Add 0x01 0x01)  (Add (Number 0x02) (Number 0x02))
   ifelse 0 (1 + 5) (2 + 2)
 
-
+{-
 -- Think we need to be explicit with the args....
 -- we ought to be able to simplify stuff.
 function : String -> Expr -> Expr
@@ -314,7 +323,7 @@ myfunc3 c =
       then (1 + 456)
       else 123
 
-
+-}
 
 
 main : IO ()
@@ -327,22 +336,23 @@ main = do
 
   let ops = compile expr
   -- let ops = [ JUMPDEST , JUMPDEST, JUMPDEST , ISZERO ]
-  printLn $ human' ops 
+  printLn . human' $ ops 
+
+  printLn . human' . resolve $ ops 
+
+  printLn . machine' . resolve $ ops
 
 
-  printLn $ human' $ resolve ops 
 
-  printLn $ machine' $ resolve ops
+--  assertEquals (index 0 k) k 
+
   -- printLn $ Strings.length $ machine' ops 
-
   -- printLn $ length' ops 
-
-
   -- printLn $ human' $ resolve $ simpleLoader 10
 
 
 -- let ops = [ JUMPDEST , JUMPDEST, JUMPDEST , ISZERO ]
-  printLn $ machine' $ resolve [ DATA8 $ Plus (Literal 3) (Literal 4) , JUMPDEST, JUMPDEST , ISZERO ]
+  printLn . machine' . resolve $ [ DATA8 $ Plus (Literal 3) (Literal 4) , JUMPDEST, JUMPDEST , ISZERO ]
 
 
 

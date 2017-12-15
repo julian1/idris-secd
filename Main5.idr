@@ -1,5 +1,8 @@
 
 {-
+  OK - this is the approach - same as a haskell string.
+    cons makes sense. ++ makes sense. we get fold etc. 
+
 if one wanted to represent a list of instructions for a stck machine/vm - what order would one choose?
 
   [ PUSH, PUSH, ADD ]
@@ -16,7 +19,8 @@ import Assembler
 
 infixr 7 &
 
--- ok it works completely fine... The confusing bit is nil is last...
+-- synonym for (::) refining the type makes it easier for the typechecker 
+-- The confusing bit is nil is last... but it's the same as string concatenation
 (&) :  OpCode -> List OpCode -> List OpCode
 (&) =  Prelude.List.(::)
 
@@ -44,6 +48,7 @@ main = do
 
   printLn $ human' j
   printLn $ human' k
+  printLn $ human' (k ++ k)
 
   pure ()
 

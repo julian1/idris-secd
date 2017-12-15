@@ -187,7 +187,14 @@ human' : List OpCode -> String
 human' ops = foldr f "" $ map human ops
   where f acc s = acc ++ ", " ++ s
 
+{-
+  THIS IS BETTER
 
+human'' : List OpCode -> String
+human'' ops = foldl f "" ops where
+  f acc op = acc ++ ", " ++ human op
+
+-}
 
 
 -- machine representation of code
