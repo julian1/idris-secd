@@ -182,6 +182,7 @@ human expr = case expr of
   COMMENT text => ""
 
 export
+-- think all this stuff is wrong...
 human' : List OpCode -> String
 human' ops = foldr f "" $ map human ops
   where f acc s = acc ++ ", " ++ s
