@@ -47,7 +47,7 @@ data Expr : Type where
   Return : Expr -> Expr -> Expr
   CallDataSize : Expr
 
-  Loader : Expr -> Expr -- it's a primitive
+  -- Loader : Expr -> Expr -- it's a primitive
 
   Ops : List OpCode -> Expr
 
@@ -175,11 +175,12 @@ compile expr = case expr of
   Log0 addr val  => compile val ++ compile addr ++ [ LOG0 ]
 
 
+  {-
   Loader expr =>
       let ops = compile expr in 
       let len = length' ops in
       simpleLoader len ++ ops
-
+  -}
 
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
@@ -266,93 +267,29 @@ address = Address
 balance : Expr -> Expr
 balance = Balance
 
-loader : Expr -> Expr 
-loader = Loader
+-- loader : Expr -> Expr 
+-- loader = Loader
 
 
-
--- http://docs.idris-lang.org/en/latest/tutorial/syntax.html
-syntax "if" [test] "then" [t] "else" [e] = If test t e;
-
-syntax "var" [name] = Variable name;
-
--- OK we can use {x} for bound variable names...
--- syntax define {fname} {arg} ":=" [exp] = Apply exp
--- syntax "lambda"  {arg} ":=" [exp] = Apply exp
-
-
-----------------
-
-expr : Expr
-expr =
-  -- Add (Add (Number 10) (Number 1)) (Number 1)
-  -- If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
-  -- If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
-  -- If (Number 0) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
-  -- If 0  (Add 0x01 0x01)  (Add (Number 0x02) (Number 0x02))
-  ifelse 0 (1 + 5) (2 + 2)
-
-{-
--- Think we need to be explicit with the args....
--- we ought to be able to simplify stuff.
-function : String -> Expr -> Expr
-function s expr = Apply expr
-
-
-
--- OK there is support with dsl support... - including with lambdas.
-
-
-myfunc0: Expr
-myfunc0 = 0xaa + 0xbb
-
--- add 1
-myfunc1: Expr -> Expr
--- myfunc arg = (Number 0x01) `add` arg
-myfunc1 arg = 1 + arg
-
--- add two functions
-myfunc2: Expr -> Expr -> Expr
-myfunc2 a b = function "myfunc2" $ a + b
-
-
-myfunc3: Expr -> Expr
-myfunc3 c =
-  function "myfunc3" $
-    if c
-      then (1 + 456)
-      else 123
-
--}
-
+--expr : Expr
 
 main : IO ()
 main = do
 
-  -- let xxx = the (Either Integer String) $ Left 123
-  -- the freaking offset calculation is a bit complicated...
 
-  -- let ops = compile $ myfunc3 Arg1
-
-  let ops = compile expr
-  -- let ops = [ JUMPDEST , JUMPDEST, JUMPDEST , ISZERO ]
-  printLn . human' $ ops 
-
-  printLn . human' . resolve $ ops 
-
-  printLn . machine' . resolve $ ops
+  let expr = ifelse 0 (1 + 5) (2 + 2)
 
 
-
---  assertEquals (index 0 k) k 
-
-  -- printLn $ Strings.length $ machine' ops 
-  -- printLn $ length' ops 
-  -- printLn $ human' $ resolve $ simpleLoader 10
+  printLn . human' . resolve . compile $ expr
+  -- printLn . machine' . resolve $ ops
 
 
--- let ops = [ JUMPDEST , JUMPDEST, JUMPDEST , ISZERO ]
-  printLn . machine' . resolve $ [ DATA8 $ Plus (Literal 3) (Literal 4) , JUMPDEST, JUMPDEST , ISZERO ]
+  assertEquals (machine' . resolve . compile $ expr ) "600015600E5760056001016014565b60026002015b" 
+
+
+  assertEquals 
+    (machine' . resolve $ [ DATA8 $ Plus (Literal 3) (Literal 4) , JUMPDEST, JUMPDEST , ISZERO ])
+    "075b5b15"
 
 
 
@@ -440,4 +377,68 @@ The argument of PUSH1 is also separated by white space
     although would be a lot nicer when typed...
 
 -}
+  -- printLn $ Strings.length $ machine' ops 
+  -- printLn $ length' ops 
+  -- printLn $ human' $ resolve $ simpleLoader 10
 
+
+-- let ops = [ JUMPDEST , JUMPDEST, JUMPDEST , ISZERO ]
+--  printLn . machine' . resolve $ [ DATA8 $ Plus (Literal 3) (Literal 4) , JUMPDEST, JUMPDEST , ISZERO ]
+{-
+-- http://docs.idris-lang.org/en/latest/tutorial/syntax.html
+syntax "if" [test] "then" [t] "else" [e] = If test t e;
+
+syntax "var" [name] = Variable name;
+
+-- OK we can use {x} for bound variable names...
+-- syntax define {fname} {arg} ":=" [exp] = Apply exp
+-- syntax "lambda"  {arg} ":=" [exp] = Apply exp
+  -- Add (Add (Number 10) (Number 1)) (Number 1)
+  -- If (Number 0) (Add (Number 0x01) (Number 0x01))  (Add (Number 0x02) (Number 0x02))
+  -- If (Number 1) (Add (Number 0x01) (Number 0x01))  ((Number 0x04) )
+  -- If (Number 0) ((Number 0x01))  (Add (Number 0x02) (Number 0x02))
+  -- If 0  (Add 0x01 0x01)  (Add (Number 0x02) (Number 0x02))
+
+-}
+----------------
+
+{-
+-- Think we need to be explicit with the args....
+-- we ought to be able to simplify stuff.
+function : String -> Expr -> Expr
+function s expr = Apply expr
+
+
+
+-- OK there is support with dsl support... - including with lambdas.
+
+
+myfunc0: Expr
+myfunc0 = 0xaa + 0xbb
+
+-- add 1
+myfunc1: Expr -> Expr
+-- myfunc arg = (Number 0x01) `add` arg
+myfunc1 arg = 1 + arg
+
+-- add two functions
+myfunc2: Expr -> Expr -> Expr
+myfunc2 a b = function "myfunc2" $ a + b
+
+
+myfunc3: Expr -> Expr
+myfunc3 c =
+  function "myfunc3" $
+    if c
+      then (1 + 456)
+      else 123
+
+-}
+  -- let xxx = the (Either Integer String) $ Left 123
+  -- the freaking offset calculation is a bit complicated...
+
+  -- let ops = compile $ myfunc3 Arg1
+
+  -- let ops = compile expr
+  -- let ops = [ JUMPDEST , JUMPDEST, JUMPDEST , ISZERO ]
+  -- printLn . human' $ ops 
