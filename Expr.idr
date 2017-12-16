@@ -105,20 +105,28 @@ compile expr = case expr of
   -- relative jump labeling
   -- need more than one byte... and proof about len offset
   -- none of this list concat is efficient. probably should use join/flatten
+  -- going to have to deal with jump offsets greater than 0x to 255 here 
   If pred a b =>
-    let p = compile pred
-        l = compile a
-        r = compile b
-        -- ll = toIntegerNat $ length l
-        -- lr = toIntegerNat $ length r
+    let 
+      p = compile pred
+      l = compile a
+      r = compile b
     in
-     p ++ [ ISZERO ]
-      ++ [ PUSH1 $ Symbol "label1", JUMPI ]
-      ++ l
-      ++ [ PUSH1 $ Symbol "label2", JUMP ]
-      ++ [ LABEL "label1", JUMPDEST  ]
-      ++ r
-      ++ [ LABEL "label2", JUMPDEST  ]
+      p ++ [ 
+        ISZERO, 
+        PUSH1 (Symbol "label1"), 
+        JUMPI 
+      ]
+      ++ l ++ [ 
+        PUSH1 (Symbol "label2"), 
+        JUMP, 
+        LABEL "label1", 
+        JUMPDEST  
+      ]
+      ++ r ++ [ 
+        LABEL "label2", 
+        JUMPDEST  
+      ]
 
 {-
       p ++ [ ISZERO ]
@@ -158,7 +166,7 @@ compile expr = case expr of
 
    
 
-  Gas => [ GAS ]
+  Gas => GAS & Nil
   Address => [ ADDRESS ]
   Balance addr => compile addr ++ BALANCE & Nil -- [ BALANCE ]
 
