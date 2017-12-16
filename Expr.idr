@@ -43,13 +43,14 @@ data Expr : Type where
 
   -- codecopy(t, f, s)   -   copy s bytes from code at position f to mem at position t
   CodeCopy : Expr -> Expr -> Expr -> Expr
+  
+  Return : Expr -> Expr -> Expr
 
   Gas : Expr
   Address : Expr
   Balance : Expr -> Expr
   MStore : Expr -> Expr -> Expr
   MLoad : Expr -> Expr
-  Return : Expr -> Expr -> Expr
   CallDataSize : Expr
 
 
@@ -175,6 +176,11 @@ compile expr = case expr of
   -- codecopy(t, f, s)   -   copy s bytes from code at position f to mem at position t
   CodeCopy addr f s => compile s ++ compile f ++ compile addr ++ [ CODECOPY ]
 
+
+  -- return(p, s)  -   end execution, return data mem[p..(p+s))
+  Return addr s => compile s ++ compile addr ++ [ RETURN ]
+  
+
   -- IMPORTANT - codecopy can be used in place of [ push, mstore ] for large literals, not just code
   -- val is confusing with v for value.
 
@@ -189,8 +195,6 @@ compile expr = case expr of
 
   MLoad addr => compile addr ++ [ MLOAD ]
 
-  -- return(p, s)  -   end execution, return data mem[p..(p+s))
-  Return addr val => compile val ++ compile addr ++ [ RETURN ]
 
   CallDataSize => [ CALLDATASIZE ]
 
@@ -273,6 +277,9 @@ create = Create
 codecopy : Expr -> Expr -> Expr -> Expr 
 codecopy = CodeCopy
 
+return : Expr  -> Expr -> Expr 
+return = Return
+
 
 
 
@@ -282,8 +289,6 @@ codecopy = CodeCopy
 mstore : Expr -> Expr -> Expr
 mstore = MStore
 
-return : Expr -> Expr -> Expr
-return = Return
 
 calldatasize : Expr
 calldatasize = CallDataSize

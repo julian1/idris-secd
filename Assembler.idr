@@ -310,7 +310,7 @@ eval context expr = eval' expr
       Symbol sym =>
         case lookup sym context of
           Just val => val
-          Nothing => -9999    -- TODO fixme
+          -- Nothing => -9999    -- TODO fixme  -- fail
 
       Literal val => val
       Plus l r    => eval' l + eval' r
@@ -351,7 +351,7 @@ resolve xs =
 
 
 
-
+{-
 -- this loader stuff belongs elsewhere
 
 export
@@ -386,7 +386,7 @@ addLoader ops =
     ];
   in loader ++ ops
 
-
+-}
 {-
   - should we type the width of the symbol. or have a string symbol?
    we want the ability to create symbols, not just encode labels.

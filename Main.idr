@@ -45,34 +45,32 @@ main = do
         codecopy                                                  -- copy contract code and loader to memory 0, starting pos 30, len 16
           0                                               
           (sym (Symbol "loader_start"))
-          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- eg length of k and loader 
+          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- length of k and loader 
       ^ create                                                    -- create the contract . not we could have just dupped the length
-          0 
-          0                                                                                   -- eth value 
-          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- eg length of k and loader 
+          0                                                                                   -- eth value
+          0                                                                                   -- pos  
+          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- length of k and loader 
+    
       ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0              -- call contract, swapping in the address returned from create
       ^ asm [ POP, POP, STOP ]                                   -- clean up stack
 
+      -- loader
       ^ label "loader_start"
-      -- OK rather than express this whole thing as asm should be able to do it high level. it's just a code copy
-      ^ asm [ 
-          PUSH1 . Literal $ len, 
-          -- DUP 1,                    -- this will be used for the return value   
-          PUSH1 $ (Sub (Symbol "loader_finish") (Symbol "loader_start")),  -- the loader size
-          PUSH1 . Literal $ 0, 
-          CODECOPY,               -- load the contract into mem (not the creation)
-
-          PUSH1 . Literal $ len, 
-          PUSH1 . Literal $ 0,    -- return the address of the loaded contract? or size? 
-          RETURN                  -- create the contract from mem, and return the address
-      ] -- this is the loader
+      ^ codecopy                                                  -- copy contract code, starting at end of loader to memory pos 0
+          0
+          (sym (Sub (Symbol "loader_finish") (Symbol "loader_start")))
+          (sym (Literal len))
+      ^ return                                                    -- return the addr and len for where to find the contract in the create
+          0
+          (sym (Literal len))
       ^ label "loader_finish"
 
       -- the actual contract code
       ^ asm ops'
       ^ Nil
 
-  assertEquals code "6010601E600039601060006000f060006000600060006000855af1505000600580600B6000396000f36006600501" 
+--  assertEquals code "6010601E600039601060006000f060006000600060006000855af1505000600580600B6000396000f36006600501" 
+  assertEquals code "6011601E600039601160006000f060006000600060006000855af15050006005600C60003960056000f36006600501"
 
   -- OK I think we need to be able to expose the labels, actually can just do it with asm code.
   -- importantly - we need to be able to compile code in separate label space... or treat the code as data...
