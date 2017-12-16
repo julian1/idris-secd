@@ -195,8 +195,8 @@ compile expr = case expr of
           f expr ops = compile expr ++ ops
   -}
   (L exprs) => 
-      foldr 
-        (\expr, ops => compile expr ++ ops) 
+      foldl 
+        (\ops, expr => ops ++ compile expr ) 
         Nil 
         exprs 
  
@@ -337,7 +337,14 @@ main = do
   -- ok we should test the code works...
   -- then refactor the separate compile operations...
   -- done.
+  -- need to re-install hevm reinstalled.
 
+  -- OK we want to compile and send the output to a file for easy debug.
+
+  -- ok it is correctly returning the value at mem location (if run without --debug). but it's not logging it.
+  -- maybe need ethrun to test...
+
+  -- need to output the opcodes...
 
   let ops''' = compile . L $ 
         mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee
