@@ -57,7 +57,7 @@ data Expr : Type where
   -- Loader : Expr -> Expr -- it's a primitive
 
   -- raw opcodes - change name to OpCodes? conflict with that type in Assembler.idr
-  Ops : List OpCode -> Expr
+  Asm : List OpCode -> Expr
 
   -- side effects - chaining...
   -- Seq : Expr -> Expr -> Expr
@@ -187,7 +187,7 @@ compile expr = case expr of
 -------------------
 
   -- raw ops
-  Ops ops => ops
+  Asm ops => ops
 
   -- foldr starts from nil. foldl starts from head.
   {-
@@ -286,8 +286,8 @@ address = Address
 balance : Expr -> Expr
 balance = Balance
 
-ops : List OpCode -> Expr 
-ops = Ops
+asm : List OpCode -> Expr 
+asm = Asm
 
 -- this is really just composition. 
 -- not sure we shouldn't be using & or a simple list?
