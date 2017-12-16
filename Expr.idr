@@ -15,7 +15,7 @@ import Debug.Trace
 -- fully import so we don't have to prefix op-codes
 import Assembler 
 
-
+%access public export
 
 -- TODO This shouldn't be mixed up here...
 
@@ -303,6 +303,7 @@ infixr 7 ^
 
 
 
+%access private
 
 main : IO ()
 main = do
