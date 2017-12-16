@@ -21,7 +21,11 @@ import Assembler
 
 data Expr : Type where
 
+
   Number : Integer -> Expr        -- eg. pushing on stack is one gas.
+
+  Sym : AExpr -> Expr 
+  Label : String -> Expr 
 
   Add : Expr -> Expr  -> Expr
   Mul : Expr -> Expr  -> Expr
@@ -84,6 +88,7 @@ data Expr : Type where
 compile : Expr -> List OpCode
 compile expr = case expr of
 
+	-- number is treated as a literal
   Number val =>
     if val <= 0xff then
       PUSH1 (Literal val) & Nil
@@ -95,6 +100,13 @@ compile expr = case expr of
       [ PUSH32 $ Literal val ]
     else
       trace "ERROR: integer too large" []
+
+
+  -- need to deal with width	
+  Sym aexpr => PUSH1 aexpr & Nil
+
+  Label s => LABEL s & Nil
+
 
 
   -- Change this to built-in BinOp or arith BinOp etc... though we might want to handle types
@@ -234,6 +246,13 @@ Num Expr where
     (+) = Add
     (*) = Mul
     fromInteger n = Number n
+
+
+sym: AExpr -> Expr
+sym = Sym
+
+label: String -> Expr
+label= Label
 
 
 add: Expr -> Expr -> Expr 

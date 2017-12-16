@@ -42,18 +42,21 @@ main = do
 
   -- ok this is problematic...
   -- OK
+  -- OK important - a symbol is a literal reference...
+  -- so we should be able to handle this. without asm...
 
   let code = machine' . resolve . compile . L $ 
-        codecopy 0                                               -- copy contract code to memory 0, code pos 30, len 16
-          (asm [ PUSH1 $ Symbol "loader_start" ] ) 
-          16   
-      ^ create 0 0 16                                            -- create contract value 0, mem address 0, len 16
+        codecopy                                                  -- copy contract code to memory 0, code pos 30, len 16
+          0                                               
+          (sym (Symbol "loader_start"))
+          16                                                     -- ok, we want a symbol subtraction... 
+      ^ create 0 0 16                                            -- create contract eth value 0, mem address 0, len 16
       ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0              -- call contract, swapping in address that was returned
       ^ asm [ POP, POP, STOP ]                                   -- clean up args
 
-      ^ asm [ LABEL "loader_start" ]
+      ^ label "loader_start"
       ^ asm [ PUSH1 $ Literal len, DUP 1, PUSH1 $ Literal 0x0B, PUSH1 $ Literal 0, CODECOPY, PUSH1 $ Literal 0, RETURN ] -- this is the loader
-      ^ asm [ LABEL "loader_finish" ]
+      ^ label "loader_finish"
 
       -- ^ asm [ PUSH1 $ Literal 2, PUSH1 $ Literal 3, ADD  ]    -- this is the contract code
       ^ asm ops'

@@ -60,6 +60,7 @@ humanE expr = case expr of
 -- OpCode or Inst or just Code
 public export
 data OpCode : Type where
+
   ADD     : OpCode
   MUL     : OpCode
   SUB     : OpCode
@@ -102,7 +103,7 @@ data OpCode : Type where
   GAS      : OpCode
   ADDRESS  : OpCode
   BALANCE   : OpCode
-
+  
   -----------
   -- Non Opcodes. That can be embedded
 
