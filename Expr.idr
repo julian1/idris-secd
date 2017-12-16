@@ -47,6 +47,12 @@ data Expr : Type where
   Return : Expr -> Expr -> Expr
   CallDataSize : Expr
 
+
+  -- log0(p, s)  -   log without topics and data mem[p..(p+s))
+  Log0 : Expr -> Expr -> Expr
+
+  --------
+
   -- Loader : Expr -> Expr -- it's a primitive
 
   -- raw opcodes - change name to OpCodes? conflict with that type in Assembler.idr
@@ -55,11 +61,8 @@ data Expr : Type where
   -- side effects - chaining...
   -- Seq : Expr -> Expr -> Expr
 
-  -- list of insns
+  -- list of exprs
   L : List Expr -> Expr
-
-  -- log0(p, s)  -   log without topics and data mem[p..(p+s))
-  Log0 : Expr -> Expr -> Expr
 
 
   -- lambda args - placeholders -- change to Integer for the placehodl
@@ -164,7 +167,21 @@ compile expr = case expr of
   -- :se a list inplace of a sequencing operator
   -- : List Expr -> Expr
   -- convert to ops...
-  L exprs => foldl (\ops , expr => compile expr ++ ops ) Nil exprs
+  -- SO - we can reverse
+  -- TODO need to understand foldr versus foldl better.
+  -- if we do this with a stateful context then order matters
+  -- foldr starts from nil. foldl starts from head.
+  {-
+  (L exprs) => foldr f Nil exprs where  
+          f : Expr -> List Opcode -> List Opcode
+          f expr ops = compile expr ++ ops
+  -}
+  (L exprs) => 
+      foldr 
+        (\expr, ops => compile expr ++ ops) 
+        Nil 
+        exprs 
+    
 
   Gas => [ GAS ]
   Address => [ ADDRESS ]
@@ -317,7 +334,7 @@ main = do
 
   let ops''' = compile $ L [
         mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee, 
-        log0 0x00 32,
+        log0   0x00 32,
         return 0x00 32
       ]
 
