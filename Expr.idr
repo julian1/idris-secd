@@ -49,10 +49,14 @@ data Expr : Type where
 
   -- Loader : Expr -> Expr -- it's a primitive
 
+  -- raw opcodes - change name to OpCodes? conflict with that type in Assembler.idr
   Ops : List OpCode -> Expr
 
   -- side effects - chaining...
-  Seq : Expr -> Expr -> Expr
+  -- Seq : Expr -> Expr -> Expr
+
+  -- list of insns
+  L : List Expr -> Expr
 
   -- log0(p, s)  -   log without topics and data mem[p..(p+s))
   Log0 : Expr -> Expr -> Expr
@@ -155,7 +159,12 @@ compile expr = case expr of
   -- raw ops
   Ops ops => ops
 
-  Seq a b => compile a ++ compile b
+  --Seq a b => compile a ++ compile b
+
+  -- :se a list inplace of a sequencing operator
+  -- : List Expr -> Expr
+  -- convert to ops...
+  L exprs => foldl (\ops , expr => compile expr ++ ops ) Nil exprs
 
   Gas => [ GAS ]
   Address => [ ADDRESS ]
@@ -233,8 +242,8 @@ ops = Ops
 -- this is really just composition. 
 -- not sure we shouldn't be using & or a simple list?
 -- assembly is just a list...
-(>>=) : Expr -> Expr -> Expr 
-(>>=) = Seq
+-- (>>=) : Expr -> Expr -> Expr 
+-- (>>=) = Seq
 
 
 
@@ -293,6 +302,9 @@ main = do
       ++ (compile $ return 0x00 32)
 
 
+  -- are we sure we don't want to use a list... for the instructions... rather than a sequencing operation?
+  -- I suspect we might be able to do stuff...
+
   -- printLn . machine' . resolve $ ops''
   -- ok we should test the code works...
   -- then refactor the separate compile operations...
@@ -301,6 +313,16 @@ main = do
     (machine' . resolve $ ops'') 
     "7fEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEE60005260206000a060206000f3"
 
+
+
+  let ops''' = compile $ L [
+        mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee, 
+        log0 0x00 32,
+        return 0x00 32
+      ]
+
+  printLn . machine' . resolve $ ops''
+  printLn . machine' . resolve $ ops'''
 
   pure ()
 

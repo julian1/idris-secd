@@ -17,12 +17,18 @@ if one wanted to represent a list of instructions for a stck machine/vm - what o
 
 import Assembler
 
+-- possible infix operators :+-*\/=.?|&><!@$%^~#
 infixr 7 &
+
+
 
 -- synonym for (::) refining the type makes it easier for the typechecker 
 -- The confusing bit is nil is last... but it's the same as string concatenation
 (&) :  OpCode -> List OpCode -> List OpCode
 (&) =  Prelude.List.(::)
+
+(^) :  OpCode -> List OpCode -> List OpCode
+(^) =  Prelude.List.(::)
 
 
 -- think all this stuff is wrong...
