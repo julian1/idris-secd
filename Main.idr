@@ -62,8 +62,7 @@ main = do
       ^ asm [ 
           PUSH1 $ Literal len, 
           DUP 1,  
-          -- PUSH1 $ Literal 0x0B, 
-          PUSH1 $ (Sub (Symbol "loader_finish") (Symbol "loader_start")),  -- might be the loader size
+          PUSH1 $ (Sub (Symbol "loader_finish") (Symbol "loader_start")),  -- the loader size
           PUSH1 $ Literal 0, 
           CODECOPY, 
           PUSH1 $ Literal 0, 
