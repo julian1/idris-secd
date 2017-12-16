@@ -25,7 +25,7 @@ main = do
           (sym (Symbol "loader_start")) -- pos
           (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    
 
-      -- create the contract . note we could just dup the length
+      -- create contract. note we could just dup the length, from previous op
       ^ create                                                    
           0     -- eth value
           0     -- addr
@@ -37,10 +37,8 @@ main = do
       -- clean up stack
       ^ asm [ POP, POP, STOP ]                                   
 
-      -- loader
+      -- loader- copy contract code to mem pos 0, starting at end of loader
       ^ label "loader_start"
-  
-      -- copy contract code to mem pos 0, starting at end of loader
       ^ codecopy                                                  
           0
           (sym (Sub (Symbol "loader_finish") (Symbol "loader_start")))

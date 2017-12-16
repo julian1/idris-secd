@@ -42,25 +42,32 @@ main = do
   let len = length' ops'
 
   let code = machine' . resolve . compile . L $ 
-        codecopy                                                  -- copy contract code and loader to memory 0, starting pos 30, len 16
-          0                                               
-          (sym (Symbol "loader_start"))
-          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- length of k and loader 
-      ^ create                                                    -- create the contract . not we could have just dupped the length
-          0                                                                                   -- eth value
-          0                                                                                   -- pos  
-          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- length of k and loader 
-    
-      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0              -- call contract, swapping in the address returned from create
-      ^ asm [ POP, POP, STOP ]                                   -- clean up stack
+      -- copy contract code and loader to memory 0, starting loader start
+        codecopy                                                  
+          0     -- addr                                          
+          (sym (Symbol "loader_start")) -- pos
+          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    
 
-      -- loader
+      -- create contract. note we could just dup the length, from previous op
+      ^ create                                                    
+          0     -- eth value
+          0     -- addr
+          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    
+
+      -- call our contract, swapping in the address returned from create
+      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0              
+
+      -- clean up stack
+      ^ asm [ POP, POP, STOP ]                                   
+
+      -- loader- copy contract code to mem pos 0, starting at end of loader
       ^ label "loader_start"
-      ^ codecopy                                                  -- copy contract code, starting at end of loader to memory pos 0
+      ^ codecopy                                                  
           0
           (sym (Sub (Symbol "loader_finish") (Symbol "loader_start")))
           (sym (Literal len))
-      ^ return                                                    -- return the addr and len for where to find the contract in the create
+      -- return the mem addr and len for where to find the contract in the create
+      ^ return                                                    
           0
           (sym (Literal len))
       ^ label "loader_finish"
@@ -68,6 +75,8 @@ main = do
       -- the actual contract code
       ^ asm ops'
       ^ Nil
+
+
 
 --  assertEquals code "6010601E600039601060006000f060006000600060006000855af1505000600580600B6000396000f36006600501" 
   assertEquals code "6011601E600039601160006000f060006000600060006000855af15050006005600C60003960056000f36006600501"
