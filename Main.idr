@@ -41,14 +41,6 @@ main = do
 
   let len = length' ops'
 
-  -- ok this is problematic...
-  -- OK
-  -- OK important - a symbol is a literal reference...
-  -- so we should be able to handle this. without asm...
-
-  -- IMPORTANT
-  -- 16 - 0x0b = 5
-
   let code = machine' . resolve . compile . L $ 
         codecopy                                                  -- copy contract code and loader to memory 0, starting pos 30, len 16
           0                                               
@@ -58,17 +50,19 @@ main = do
           0 
           0                                                                                   -- eth value 
           (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- eg length of k and loader 
-      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0              -- call contract, swapping in the address that was returned
+      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0              -- call contract, swapping in the address returned from create
       ^ asm [ POP, POP, STOP ]                                   -- clean up stack
 
       ^ label "loader_start"
       -- OK rather than express this whole thing as asm should be able to do it high level. it's just a code copy
       ^ asm [ 
           PUSH1 . Literal $ len, 
-          DUP 1,                    -- this will be used for the return value   
+          -- DUP 1,                    -- this will be used for the return value   
           PUSH1 $ (Sub (Symbol "loader_finish") (Symbol "loader_start")),  -- the loader size
           PUSH1 . Literal $ 0, 
           CODECOPY,               -- load the contract into mem (not the creation)
+
+          PUSH1 . Literal $ len, 
           PUSH1 . Literal $ 0,    -- return the address of the loaded contract? or size? 
           RETURN                  -- create the contract from mem, and return the address
       ] -- this is the loader
