@@ -366,7 +366,7 @@ simpleLoader len =
   ];
 
 
-
+export
 addLoader : List OpCode -> List OpCode
 addLoader ops =
   let len = length' ops in

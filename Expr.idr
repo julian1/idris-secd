@@ -107,6 +107,7 @@ compile expr = case expr of
   -- need more than one byte... and proof about len offset
   -- none of this list concat is efficient. probably should use join/flatten
   -- going to have to deal with jump offsets greater than 0x to 255 here 
+  -- change name ifelse?
   If pred a b =>
     let 
       p = compile pred
@@ -381,8 +382,6 @@ runTests = do
 {-
   let ops' =
       (compile calldatasize) ++ [ POP ]
-
-
 
   -- these are all stateful actions...
 

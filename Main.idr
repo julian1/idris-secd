@@ -29,6 +29,23 @@ main = do
       ^ Nil
 
 
+
+  let len = 5
+
+  let code = machine' . resolve . compile . L $ 
+        codecopy 0 30 16                                    -- copy contract code to memory 0, code pos 30, len 16
+      ^ create 0 0 16                                   -- create contract value 0, mem address 0, len 16
+      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0     -- call contract, swapping in address that was returned
+      ^ asm [ POP, POP, STOP ] 
+      -- ^ (loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
+      -- ^ (loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
+      ^ asm [ PUSH1 $ Literal len, DUP 1, PUSH1 $ Literal 0x0B, PUSH1 $ Literal 0, CODECOPY, PUSH1 $ Literal 0, RETURN ]
+      ^ asm [ PUSH1 $ Literal 2, PUSH1 $ Literal 3, ADD  ]
+      ^ Nil
+
+
+
+
   printLn code
 
   h <- fopen "out.vm" "w" 
