@@ -35,6 +35,7 @@ main = do
   -- we have to compile this seperately to resolve symbols locally and 
   -- to know the length
   let ops' = resolve . compile . L $
+      -- add (add 5 6) 7
       add 5 6
       ^ Nil
 
@@ -49,28 +50,31 @@ main = do
   -- 16 - 0x0b = 5
 
   let code = machine' . resolve . compile . L $ 
-        codecopy                                                  -- copy contract code to memory 0, code pos 30, len 16
+        codecopy                                                  -- copy contract code and loader to memory 0, starting pos 30, len 16
           0                                               
           (sym (Symbol "loader_start"))
-          16                                                     -- ok, we want a symbol subtraction... 
-      ^ create 0 0 16                                            -- create contract eth value 0, mem address 0, len 16
-      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0              -- call contract, swapping in address that was returned
-      ^ asm [ POP, POP, STOP ]                                   -- clean up args
+          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- eg length of k and loader 
+      ^ create                                                    -- create the contract . not we could have just dupped the length
+          0 
+          0                                                                                   -- eth value 
+          (sym (Plus (Sub (Symbol "loader_finish") (Symbol "loader_start"))(Literal len)))    -- eg length of k and loader 
+      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0              -- call contract, swapping in the address that was returned
+      ^ asm [ POP, POP, STOP ]                                   -- clean up stack
 
       ^ label "loader_start"
       -- OK rather than express this whole thing as asm should be able to do it high level. it's just a code copy
       ^ asm [ 
-          PUSH1 $ Literal len, 
-          DUP 1,  
+          PUSH1 . Literal $ len, 
+          DUP 1,                    -- this will be used for the return value   
           PUSH1 $ (Sub (Symbol "loader_finish") (Symbol "loader_start")),  -- the loader size
-          PUSH1 $ Literal 0, 
-          CODECOPY, 
-          PUSH1 $ Literal 0, 
-          RETURN 
+          PUSH1 . Literal $ 0, 
+          CODECOPY,               -- load the contract into mem (not the creation)
+          PUSH1 . Literal $ 0,    -- return the address of the loaded contract? or size? 
+          RETURN                  -- create the contract from mem, and return the address
       ] -- this is the loader
       ^ label "loader_finish"
 
-      -- ^ asm [ PUSH1 $ Literal 2, PUSH1 $ Literal 3, ADD  ]    -- this is the contract code
+      -- the actual contract code
       ^ asm ops'
       ^ Nil
 
