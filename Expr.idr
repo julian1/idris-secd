@@ -9,6 +9,7 @@ module Expr
 import Test.Assertions
 import Test.Utils
 import Debug.Trace
+--import File
 
 
 -- fully import so we don't have to prefix op-codes
@@ -360,6 +361,14 @@ main = do
 
   printLn . machine' . resolve $ ops''
   printLn . machine' . resolve $ ops'''
+
+  h <- fopen "out.vm" "w" 
+  case h of 
+    Right f => do
+      printLn "whoot"
+      fPutStr f ( machine' . resolve $ ops''')
+      closeFile f
+      pure ()
 
   pure ()
 
