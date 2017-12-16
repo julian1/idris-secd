@@ -29,22 +29,29 @@ main = do
       ^ Nil
 
 
+  -- we have to compile this seperately to resolve symbols locally and 
+  -- to know the length
+  let code' = resolve . compile . L $
+      add 5 6
+      ^ Nil
 
   let len = 5
 
   let code = machine' . resolve . compile . L $ 
-        codecopy 0 30 16                                    -- copy contract code to memory 0, code pos 30, len 16
-      ^ create 0 0 16                                   -- create contract value 0, mem address 0, len 16
-      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0     -- call contract, swapping in address that was returned
-      ^ asm [ POP, POP, STOP ] 
+        codecopy 0 30 16                                      -- copy contract code to memory 0, code pos 30, len 16
+      ^ create 0 0 16                                         -- create contract value 0, mem address 0, len 16
+      ^ call gas (asm [ DUP 6 ]) 0  0x0 0x0 0x0 0x0           -- call contract, swapping in address that was returned
+      ^ asm [ POP, POP, STOP ]                                -- clean up args
       -- ^ (loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
       -- ^ (loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
       ^ asm [ PUSH1 $ Literal len, DUP 1, PUSH1 $ Literal 0x0B, PUSH1 $ Literal 0, CODECOPY, PUSH1 $ Literal 0, RETURN ] -- this is the loader
-      ^ asm [ PUSH1 $ Literal 2, PUSH1 $ Literal 3, ADD  ]    -- this is the contract code
+      -- ^ asm [ PUSH1 $ Literal 2, PUSH1 $ Literal 3, ADD  ]    -- this is the contract code
+      ^ asm code'
       ^ Nil
 
 
-  -- OK I think we need to be able to expose the labels.
+  -- OK I think we need to be able to expose the labels, actually can just do it with asm code.
+  -- importantly - we need to be able to compile code in separate label space... or treat the code as data...
 
 
   printLn code
