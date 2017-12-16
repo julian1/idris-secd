@@ -305,8 +305,8 @@ infixr 7 ^
 
 %access private
 
-main : IO ()
-main = do
+runTests: IO ()
+runTests = do
 
   let expr = ifelse 0 (1 + 5) (2 + 2)
 

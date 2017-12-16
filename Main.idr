@@ -6,10 +6,13 @@ import Expr
 main : IO ()
 main = do
 
-  let expr = ifelse 1 (1 + 5) (2 + 2)
+  -- let expr = ifelse 1 (1 + 5) (2 + 2)
+  let code = machine' . resolve . compile . L $ 
+        mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee
+      ^ log0   0x00 32
+      ^ return 0x00 32
+      ^ Nil
 
-  let code = machine' . resolve . compile $ expr
-  
   printLn code
 
   h <- fopen "out.vm" "w" 
