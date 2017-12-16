@@ -43,6 +43,7 @@ data AExpr : Type where
   Symbol  : String -> AExpr
   Literal : Integer -> AExpr
   Plus    : AExpr -> AExpr -> AExpr
+  Sub     : AExpr -> AExpr -> AExpr
 
 
 
@@ -54,6 +55,7 @@ humanE expr = case expr of
   Symbol sym  => sym
   Literal val => show val
   Plus l r    => humanE l ++  " + " ++ humanE r
+  Sub l r     => humanE l ++  " - " ++ humanE r
 
 
 
@@ -312,6 +314,7 @@ eval context expr = eval' expr
 
       Literal val => val
       Plus l r    => eval' l + eval' r
+      Sub l r    => eval' l - eval' r
 
 
 

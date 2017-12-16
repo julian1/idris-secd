@@ -45,6 +45,9 @@ main = do
   -- OK important - a symbol is a literal reference...
   -- so we should be able to handle this. without asm...
 
+  -- IMPORTANT
+  -- 16 - 0x0b = 5
+
   let code = machine' . resolve . compile . L $ 
         codecopy                                                  -- copy contract code to memory 0, code pos 30, len 16
           0                                               
@@ -55,7 +58,17 @@ main = do
       ^ asm [ POP, POP, STOP ]                                   -- clean up args
 
       ^ label "loader_start"
-      ^ asm [ PUSH1 $ Literal len, DUP 1, PUSH1 $ Literal 0x0B, PUSH1 $ Literal 0, CODECOPY, PUSH1 $ Literal 0, RETURN ] -- this is the loader
+      -- OK rather than express this whole thing as asm should be able to do it high level. it's just a code copy
+      ^ asm [ 
+          PUSH1 $ Literal len, 
+          DUP 1,  
+          -- PUSH1 $ Literal 0x0B, 
+          PUSH1 $ (Sub (Symbol "loader_finish") (Symbol "loader_start")),  -- might be the loader size
+          PUSH1 $ Literal 0, 
+          CODECOPY, 
+          PUSH1 $ Literal 0, 
+          RETURN 
+      ] -- this is the loader
       ^ label "loader_finish"
 
       -- ^ asm [ PUSH1 $ Literal 2, PUSH1 $ Literal 3, ADD  ]    -- this is the contract code
