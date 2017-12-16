@@ -6,11 +6,14 @@ import Expr
 main : IO ()
 main = do
 
-  -- let expr = ifelse 1 (1 + 5) (2 + 2)
   let code = machine' . resolve . compile . L $ 
-        mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee
-      ^ log0   0x00 32
-      ^ return 0x00 32
+      ifelse 1 (1 + 5) (2 + 2)
+      ^ Nil
+
+  let code = machine' . resolve . compile . L $ 
+        mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee  -- store value to 0x00
+      ^ log0   0x00 32    -- log value at 0x0
+      ^ return 0x00 32    -- return value at 0x0    
       ^ Nil
 
   -- works - sends 1 eth to address 0x, use hevm with --value flag.
@@ -24,7 +27,6 @@ main = do
       ^ asm [ POP ]                       -- show eth amount
       ^ asm [ STOP ]
       ^ Nil
-
 
 
   printLn code
