@@ -24,6 +24,13 @@ import Helpers
 -}
 
 
+infixr 7 &
+
+
+
+
+
+
 {-
   simple expressions for symbols and literals
   VERY IMPORTANT width checking for operands should occur after resolution...
@@ -105,6 +112,15 @@ data OpCode : Type where
   -- change name to label..., because there are other types of LABELs
   LABEL : String -> OpCode
   COMMENT : String -> OpCode
+
+
+
+-- synonym for (::) refining the type makes it easier for the typechecker 
+-- The confusing bit is nil is last... but it's the same as string concatenation
+-- should move this opcode to Assembler...
+public export
+(&) :  OpCode -> List OpCode -> List OpCode
+(&) =  Prelude.List.(::)
 
 
 

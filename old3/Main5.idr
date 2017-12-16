@@ -24,11 +24,9 @@ infixr 7 &
 
 -- synonym for (::) refining the type makes it easier for the typechecker 
 -- The confusing bit is nil is last... but it's the same as string concatenation
+-- should move this opcode to Assembler...
 (&) :  OpCode -> List OpCode -> List OpCode
 (&) =  Prelude.List.(::)
-
-(^) :  OpCode -> List OpCode -> List OpCode
-(^) =  Prelude.List.(::)
 
 
 -- think all this stuff is wrong...

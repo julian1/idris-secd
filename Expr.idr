@@ -85,7 +85,7 @@ compile expr = case expr of
 
   Number val =>
     if val <= 0xff then
-      [ PUSH1 $ Literal val ]
+      PUSH1 (Literal val) & Nil
     else if val <= pow 2 (2 * 8) then   -- ie 0xffff
       [ PUSH2 $ Literal val ]
     else if val <= pow 2 (20 * 8) then  -- ie 0xffffffffffffffffffffffffffffffffff
@@ -160,10 +160,10 @@ compile expr = case expr of
 
   Gas => [ GAS ]
   Address => [ ADDRESS ]
-  Balance addr => compile addr ++ [ BALANCE ]
+  Balance addr => compile addr ++ BALANCE & Nil -- [ BALANCE ]
 
   -- mstore(addr, v)
-  MStore addr val => compile val ++ compile addr ++ [ MSTORE ]
+  MStore addr val => compile val ++ compile addr ++ MSTORE & Nil 
 
   MLoad addr => compile addr ++ [ MLOAD ]
 
@@ -325,8 +325,10 @@ main = do
   -- I suspect we might be able to do stuff...
 
   -- printLn . machine' . resolve $ ops''
+
   -- ok we should test the code works...
   -- then refactor the separate compile operations...
+  -- done.
 
 
   let ops''' = compile . L $ 
