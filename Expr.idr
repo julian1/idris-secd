@@ -159,29 +159,7 @@ compile expr = case expr of
   -- IMPORTANT - codecopy can be used in place of [ push, mstore ] for large literals, not just code
   -- val is confusing with v for value.
 
-  -- raw ops
-  Ops ops => ops
-
-  --Seq a b => compile a ++ compile b
-
-  -- :se a list inplace of a sequencing operator
-  -- : List Expr -> Expr
-  -- convert to ops...
-  -- SO - we can reverse
-  -- TODO need to understand foldr versus foldl better.
-  -- if we do this with a stateful context then order matters
-  -- foldr starts from nil. foldl starts from head.
-  {-
-  (L exprs) => foldr f Nil exprs where  
-          f : Expr -> List Opcode -> List Opcode
-          f expr ops = compile expr ++ ops
-  -}
-  (L exprs) => 
-      foldr 
-        (\expr, ops => compile expr ++ ops) 
-        Nil 
-        exprs 
-    
+   
 
   Gas => [ GAS ]
   Address => [ ADDRESS ]
@@ -200,12 +178,30 @@ compile expr = case expr of
   -- log0(p, s)  -   log without topics and data mem[p..(p+s))
   Log0 addr val  => compile val ++ compile addr ++ [ LOG0 ]
 
+-------------------
 
+  -- raw ops
+  Ops ops => ops
+
+  -- foldr starts from nil. foldl starts from head.
   {-
-  Loader expr =>
-      let ops = compile expr in 
-      let len = length' ops in
-      simpleLoader len ++ ops
+  (L exprs) => foldr f Nil exprs where  
+          f : Expr -> List Opcode -> List Opcode
+          f expr ops = compile expr ++ ops
+  -}
+  (L exprs) => 
+      foldr 
+        (\expr, ops => compile expr ++ ops) 
+        Nil 
+        exprs 
+ 
+  {-
+    Seq a b => compile a ++ compile b
+
+    Loader expr =>
+        let ops = compile expr in 
+        let len = length' ops in
+        simpleLoader len ++ ops
   -}
 
   -- var is on the stack so there's nothing to do...
@@ -253,17 +249,6 @@ codecopy = CodeCopy
 
 
 
-ops : List OpCode -> Expr 
-ops = Ops
-
--- this is really just composition. 
--- not sure we shouldn't be using & or a simple list?
--- assembly is just a list...
--- (>>=) : Expr -> Expr -> Expr 
--- (>>=) = Seq
-
-
-
 
 -- IMPORTANT - all the stateful operations - they should be using an append/ monoid. Not embedded in an expression.
 -- particularly when use vars
@@ -294,6 +279,22 @@ address = Address
 
 balance : Expr -> Expr
 balance = Balance
+
+ops : List OpCode -> Expr 
+ops = Ops
+
+-- this is really just composition. 
+-- not sure we shouldn't be using & or a simple list?
+-- assembly is just a list...
+-- (>>=) : Expr -> Expr -> Expr 
+-- (>>=) = Seq
+
+
+infixr 7 ^
+
+(^) :  Expr -> List Expr -> List Expr
+(^) =  Prelude.List.(::)
+
 
 
 
@@ -332,11 +333,17 @@ main = do
 
 
 
-  let ops''' = compile $ L [
-        mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee, 
-        log0   0x00 32,
-        return 0x00 32
-      ]
+  let ops''' = compile . L $ 
+        mstore 0x00 0xeeffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffee
+      ^ log0   0x00 32
+      ^ return 0x00 32
+      ^ Nil
+
+  assertEquals 
+    (machine' . resolve $ ops''') 
+    "7fEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEE60005260206000a060206000f3"
+
+
 
   printLn . machine' . resolve $ ops''
   printLn . machine' . resolve $ ops'''
