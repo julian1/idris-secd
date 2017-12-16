@@ -78,9 +78,6 @@ data Expr : Type where
 
 
 
-compile' : Expr -> List OpCode
-compile' expr = [ POP ] 
-
 
 
 compile : Expr -> List OpCode
@@ -319,6 +316,10 @@ main = do
       ++ (compile $ log0 0x00 32)
       ++ (compile $ return 0x00 32)
 
+  assertEquals 
+    (machine' . resolve $ ops'') 
+    "7fEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEE60005260206000a060206000f3"
+
 
   -- are we sure we don't want to use a list... for the instructions... rather than a sequencing operation?
   -- I suspect we might be able to do stuff...
@@ -326,11 +327,6 @@ main = do
   -- printLn . machine' . resolve $ ops''
   -- ok we should test the code works...
   -- then refactor the separate compile operations...
-
-  assertEquals 
-    (machine' . resolve $ ops'') 
-    "7fEEFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEE60005260206000a060206000f3"
-
 
 
   let ops''' = compile . L $ 
