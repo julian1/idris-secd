@@ -39,11 +39,12 @@ main = do
       ^ asm [ POP, POP, STOP ] 
       -- ^ (loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
       -- ^ (loader $ add 3 4)                                 -- simple contract to add two numbers - offset is 30 
-      ^ asm [ PUSH1 $ Literal len, DUP 1, PUSH1 $ Literal 0x0B, PUSH1 $ Literal 0, CODECOPY, PUSH1 $ Literal 0, RETURN ]
-      ^ asm [ PUSH1 $ Literal 2, PUSH1 $ Literal 3, ADD  ]
+      ^ asm [ PUSH1 $ Literal len, DUP 1, PUSH1 $ Literal 0x0B, PUSH1 $ Literal 0, CODECOPY, PUSH1 $ Literal 0, RETURN ] -- this is the loader
+      ^ asm [ PUSH1 $ Literal 2, PUSH1 $ Literal 3, ADD  ]    -- this is the contract code
       ^ Nil
 
 
+  -- OK I think we need to be able to expose the labels.
 
 
   printLn code
