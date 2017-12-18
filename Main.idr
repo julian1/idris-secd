@@ -41,8 +41,13 @@ main = do
 
   let len = length' ops'
 
-  -- ok hang on. create can be treated as a function (with side-effects) that returns a value
 
+  
+  -- SO - how do we deal with this.... a construct for variable binding ....
+  -- in lambda calculus - they are free variables.
+  -- OK so this does in fact work...
+
+  -- ok hang on. create can be treated as a function (with side-effects) that returns a value
   -- we should be able to rewrite the entire thing as an expression...
 
   let code = machine' . resolve . compile . L $ 
