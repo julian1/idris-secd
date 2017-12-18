@@ -41,6 +41,10 @@ main = do
 
   let len = length' ops'
 
+  -- ok hang on. create can be treated as a function (with side-effects) that returns a value
+
+  -- we should be able to rewrite the entire thing as an expression...
+
   let code = machine' . resolve . compile . L $ 
       -- copy contract code and loader to memory 0, starting loader start
         codecopy                                                  
@@ -76,6 +80,20 @@ main = do
       ^ asm ops'
       ^ Nil
 
+  -- it would be easy to track stack usage and vars with linear code - but what about with jumps
+  -- so instead approach from a lambda calc - and compile down?
+  -- dup basically creates a limit to the number of vars that can be put on the stack.
+
+  -- so we have pushing values onto the stack. but not returning values
+  -- in any kind of meaningful way. or cleaning up stack.
+  -- we have expression syntax that leaves a value. but then we have to dup it to use it somewhere
+  -- and keep track of the stack... to know what to dup.
+  -- each action - can be thought of as something that manipulates stack / mem... 
+
+  -- just raw op-codes that get compiled isn't working. we need
+  -- compilation is perhaps going to need to be a fold - propagating variables (or placeholders) 
+
+  -- OR just assign vars. and patch up later? 
 
 
 --  assertEquals code "6010601E600039601060006000f060006000600060006000855af1505000600580600B6000396000f36006600501" 
