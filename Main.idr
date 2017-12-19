@@ -50,6 +50,15 @@ main = do
   -- ok hang on. create can be treated as a function (with side-effects) that returns a value
   -- we should be able to rewrite the entire thing as an expression...
 
+  -------------
+  -- OK - free variables - have to be put on the environment. In order that we can 
+  --  capture the environment in a closure. if we have to. we can optimise out later - if needed.
+
+  -- read - just substitute var/debrujn index - with the value in the env
+  -- write - not sure.
+
+  -- so we need to model a stack/list of environment values  - in the evm.
+
   let code = machine' . resolve . compile . L $ 
       -- copy contract code and loader to memory 0, starting loader start
         codecopy                                                  
