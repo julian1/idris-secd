@@ -58,6 +58,40 @@ main = do
   -- write - not sure.
 
   -- so we need to model a stack/list of environment values  - in the evm.
+  -- let x = y in y 3 . it's discussed in haskell book - and it gets compiled to debrujn indices...
+  -- there's monadic chaining which is sequential. but that's different to treating it all as let bindings .
+  
+  -- lambda abstraction \x.123   where x is () ....
+  
+  -- variable binding of free functions. .
+  -- actually the function is fixed.
+  
+  {- 
+  -- VERY IMPORTANT - I think it might make sense to change to use the lambda representation and then a separate
+      representing the op 
+      actual operation. in the way that we had binop for + operations etc..
+      need to find the example
+
+
+    let binding of free variables is simply syntactic sugar.
+      so do we really want to introduce something like this....
+      do we parse the expression? - yes. so we can output debug.
+        
+
+    (λf.N) M
+
+    Authors often introduce syntactic sugar, such as let, to permit writing the above in the more intuitive order
+
+    let f = M in N 
+
+    when it gets lambda'ised like this, we will need Apply etc.
+    lambda f . var N, 
+
+    OK let f = M in N . SO, this means we actually probably *do* want to change from
+      the list notation. to a lambda expression... where the binding is expressed.
+
+    look at how we represented it - for the idris lambda syntax.
+  -}
 
   let code = machine' . resolve . compile . L $ 
       -- copy contract code and loader to memory 0, starting loader start

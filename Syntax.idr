@@ -89,21 +89,21 @@ human e = case e of
 -- but we are not managing to prove anything about the computation 
 
 -- this could construct a much more complicated type. representing expectations of args...
-fact : Expr
--- fact = expr ( (\x => Plus x (Val 1))   )
--- fact = expr ( (\x,y => Plus x y )   )
-fact = expr $ 
+
+expr : Expr
+expr = expr ( 
   let 
       -- f a b = Plus a b
       f = (\x,y => Plus x y)
       x = Val 123 
       y = Val 456
   in f 
+  )
 
 
 main : IO ()
 main = do
-  printLn $ human Main.fact
+  printLn $ human Main.expr
 
 
 -- don't think there's support for free variables... - but there is support for let binding?
