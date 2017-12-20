@@ -41,7 +41,7 @@
 data Expr : Type where
 
   -- Var takes pop and stop -- NO NOT SURE.
-  Var : Expr -> Expr
+  Var' : Expr -> Expr
 
   Val : Integer -> Expr
   Plus : Expr -> Expr -> Expr
@@ -55,8 +55,9 @@ data Expr : Type where
 
   -- App :  Expr -> Expr
 
+
 dsl expr
-  variable    = Var
+  variable    = Var'
   index_first = Stop
   index_next  = Pop
   -- lambda      = mkLam
@@ -73,7 +74,7 @@ dsl expr
 
 human : Expr -> String 
 human e = case e of 
-  Var stack => "(var " ++ human stack ++ ")"
+  Var' stack => "(var " ++ human stack ++ ")"
   Val val   => "(val " ++ show val ++ ")"
   Plus l r  => "(plus " ++ human l ++ " " ++ human r ++ ")"
   Stop      => "stop"
@@ -85,9 +86,7 @@ human e = case e of
 
 -- Complete DSL expression - but how much of the types are exposed.
 -- may not matter - we can have a correct by construction expression tree.
-
 -- but we are not managing to prove anything about the computation 
-
 -- this could construct a much more complicated type. representing expectations of args...
 
 expr : Expr
@@ -95,15 +94,18 @@ expr = expr (
   let 
       -- f a b = Plus a b
       f = (\x,y => Plus x y)
-      x = Val 123 
-      y = Val 456
-  in f 
+--      x = Val 123 
+--      y = Val 456
+  in (f  )   -- trying to apply to f x or f x y doesn't work...
   )
 
 
 main : IO ()
 main = do
   printLn $ human Main.expr
+
+
+
 
 
 -- don't think there's support for free variables... - but there is support for let binding?
