@@ -36,7 +36,7 @@ infixr 7 &
   VERY IMPORTANT width checking for operands should occur after resolution...
   and use the op-code context
   although this means data can be constructed that is not correct by construction ...
-  could introduce another width checked operand???   
+  could introduce another width checked operand???
 -}
 public export
 data AExpr : Type where
@@ -49,7 +49,7 @@ data AExpr : Type where
 
 -- IMPORTANT - TODO if expr includes a label then decimal format. else hex format.
 -- use show instead
--- 
+--
 humanE : AExpr -> String
 humanE expr = case expr of
   Symbol sym  => sym
@@ -105,7 +105,7 @@ data OpCode : Type where
   GAS      : OpCode
   ADDRESS  : OpCode
   BALANCE   : OpCode
-  
+
   -----------
   -- Non Opcodes. That can be embedded
 
@@ -118,7 +118,7 @@ data OpCode : Type where
 
 
 
--- synonym for (::) refining the type makes it easier for the typechecker 
+-- synonym for (::) refining the type makes it easier for the typechecker
 -- The confusing bit is nil is last... but it's the same as string concatenation
 -- should move this opcode to Assembler...
 public export
@@ -294,17 +294,17 @@ OpCodes : Type
 OpCodes = List OpCode
 
 
--- evaluate an expression 
+-- evaluate an expression
 -- IMPORTANT - if expr includes a label then decimal format. else hex format.
 -- use show instead
 -- needs a context...
--- ahhh could pass down 
+-- ahhh could pass down
 
--- should avoid passing context down and just lexically bind. 
+-- should avoid passing context down and just lexically bind.
 
 eval : SymsTy -> AExpr -> Integer
 eval context expr = eval' expr
-  where 
+  where
     eval' : AExpr -> Integer
     eval' expr = case expr of
       Symbol sym =>
@@ -342,7 +342,7 @@ resolve xs =
     f' symbols code acc =
       case code of
         PUSH1 expr => PUSH1 $ Literal $ eval symbols expr
- 
+
         DATA8 expr => DATA8 $ Literal $ eval symbols expr
 
         _ => code
@@ -352,21 +352,18 @@ resolve xs =
 
 export
 writeFile : String -> List OpCode -> IO ()
-writeFile filename ops = do 
-  h <- fopen filename "w" 
-
-  either 
-    (\e => do
-      printLn "file open failed " 
-    )
-    (\f => do 
-      printLn $ "writing " ++ filename
+writeFile filename ops =
+  do
+    fopen filename "w" >>= either fail ok
+  where
+    ok f = do
+      printLn $ "writing ops to '" ++ filename ++ "'"
       fPutStr f (machine' . resolve $ ops)
       closeFile f
       pure ()
-    ) 
-    h
 
+    fail e = do
+      printLn "file open failed "
 
 
 
