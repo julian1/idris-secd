@@ -381,16 +381,6 @@ runTests = do
 
   writeFile "out.vm" ops'''
 
-{-
-  h <- fopen "out.vm" "w" 
-  case h of 
-    Right f => do
-      printLn "whoot"
-      fPutStr f ( machine' . resolve $ ops''')
-      closeFile f
-      pure ()
--}
-
 
   pure ()
 
