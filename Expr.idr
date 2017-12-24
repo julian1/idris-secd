@@ -379,6 +379,9 @@ runTests = do
   printLn . machine' . resolve $ ops''
   printLn . machine' . resolve $ ops'''
 
+  writeFile "out.vm" ops'''
+
+{-
   h <- fopen "out.vm" "w" 
   case h of 
     Right f => do
@@ -386,6 +389,8 @@ runTests = do
       fPutStr f ( machine' . resolve $ ops''')
       closeFile f
       pure ()
+-}
+
 
   pure ()
 

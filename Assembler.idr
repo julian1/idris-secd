@@ -350,6 +350,20 @@ resolve xs =
       :: acc
 
 
+export
+writeFile : String -> List OpCode -> IO ()
+writeFile filename ops = do 
+  h <- fopen filename "w" 
+
+  -- TODO there should be a maybe like function - we shouldn't have to destructure like this...
+  case h of 
+    Right f => do
+      printLn $ "writing " ++ filename
+      fPutStr f (machine' . resolve $ ops)
+      closeFile f
+      pure ()
+
+
 
 {-
 -- this loader stuff belongs elsewhere
