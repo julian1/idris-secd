@@ -21,7 +21,7 @@ import Assembler
 
 data Expr : Type where
 
-
+  -- there's a duplication between sym and Number. although number can be thought of as more high-level.
   Number : Integer -> Expr        -- eg. pushing on stack is one gas.
 
   Sym : AExpr -> Expr 
@@ -53,35 +53,35 @@ data Expr : Type where
   MLoad : Expr -> Expr
   CallDataSize : Expr
 
-
   -- log0(p, s)  -   log without topics and data mem[p..(p+s))
   Log0 : Expr -> Expr -> Expr
 
   --------
-
-  -- Loader : Expr -> Expr -- it's a primitive
-
   -- raw opcodes - change name to OpCodes? conflict with that type in Assembler.idr
   Asm : List OpCode -> Expr
-
-  -- side effects - chaining...
-  -- Seq : Expr -> Expr -> Expr
 
   -- list of exprs
   L : List Expr -> Expr
 
+  --------
+
+  -- Loader : Expr -> Expr -- it's a primitive
+  -- side effects - chaining...
+  -- Seq : Expr -> Expr -> Expr
+
 
   -- lambda args - placeholders -- change to Integer for the placehodl
+  {-
   Arg1 : Expr
   Arg2 : Expr
 
   -- we are going to need parenthesis, during parse...
   -- actually no... because we don't parse
 
-  Apply : Expr -> Expr
+  -- Apply : Expr -> Expr
     -- eg. (\x -> x) 123
     -- Apply2, Apply3 etc...
-
+  -}
 
 
 
@@ -90,6 +90,7 @@ compile : Expr -> List OpCode
 compile expr = case expr of
 
 	-- number is treated as a literal
+  -- number should encode the width that we want. rather than assume it, from the value .
   Number val =>
     if val <= 0xff then
       PUSH1 (Literal val) & Nil
@@ -142,17 +143,6 @@ compile expr = case expr of
         LABEL "label2", 
         JUMPDEST  
       ]
-
-{-
-      p ++ [ ISZERO ]
-      ++ [ PUSH1 $ Left $ fromInteger (ll + 8), PC, ADD, JUMPI ]
-      ++ l
-      ++ [ PUSH1 $ Left $ fromInteger (lr + 4), PC, ADD, JUMP ]
-      ++ [ JUMPDEST  ]
-      ++ r
-      ++ [ JUMPDEST  ]
--}
--- the ifelse code is not even using...
 
   -- stateful probably doesn't want to be modelled as expression syntax
   -- call(g, a, v, in, insize, out, outsize)
@@ -227,6 +217,7 @@ compile expr = case expr of
         simpleLoader len ++ ops
   -}
 
+  {-
   -- var is on the stack so there's nothing to do...
   -- actually we want to dup it so we can refer to it again...
   -- BUT - how do we know to finish at the end of the function - easy just have a wrapper F
@@ -238,7 +229,7 @@ compile expr = case expr of
   Apply e =>
       compile e
       -- and then pop off any arguments...
-
+  -}
 
 ----------------
 -- synonyms
@@ -543,4 +534,26 @@ myfunc3 c =
 
   -- let ops = compile expr
   -- let ops = [ JUMPDEST , JUMPDEST, JUMPDEST , ISZERO ]
-  -- printLn . human' $ ops 
+  
+{-
+      p ++ [ ISZERO ]
+      ++ [ PUSH1 $ Left $ fromInteger (ll + 8), PC, ADD, JUMPI ]
+      ++ l
+      ++ [ PUSH1 $ Left $ fromInteger (lr + 4), PC, ADD, JUMP ]
+      ++ [ JUMPDEST  ]
+      ++ r
+      ++ [ JUMPDEST  ]
+-}
+-- the ifelse code is not even using...
+
+{-
+      p ++ [ ISZERO ]
+      ++ [ PUSH1 $ Left $ fromInteger (ll + 8), PC, ADD, JUMPI ]
+      ++ l
+      ++ [ PUSH1 $ Left $ fromInteger (lr + 4), PC, ADD, JUMP ]
+      ++ [ JUMPDEST  ]
+      ++ r
+      ++ [ JUMPDEST  ]
+-}
+-- the ifelse code is not even using...
+-- - printLn . human' $ ops 

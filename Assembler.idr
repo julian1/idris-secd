@@ -335,9 +335,9 @@ resolve xs =
     f (m,len) (LABEL sym) = (insert sym len m, len)
     f (m,len) code         = (m, length code + len)
 
-    -- replace expressions with literal value
+    -- simplify expressions with a literal value
     -- note, we cannot change the op-code with a narrower one, because
-    -- it would change the computed lengths
+    -- it would change the computed code lengths
     f' : SymsTy -> OpCode -> OpCodes -> OpCodes
     f' symbols code acc =
       case code of
