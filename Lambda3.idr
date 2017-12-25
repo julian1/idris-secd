@@ -60,26 +60,37 @@ main = do
   -- ok compile, abstraction we have to push the stuff 
 
   -- only at apply should we push the argument... - and what about the env.
-  let ops = [
+  let ops = the (List OpCode) [
 
+    -- push return address...
+    PUSH1 (Literal 5),
+    PC,                           -- push the current PC for the return address, must use this as stack...
+    ADD,
+
+    -- push jump symbol and jump ..
     PUSH1 (Symbol "mylambda"), 
-    PC,                           -- push the current PC for the return address
-
-
+    JUMP,
+  
+    -- return jumpdest
     JUMPDEST , 
-
+    STOP,
+    STOP,
 
     -- my lambda function
-    LABEL "label1", 
+    LABEL "mylambda", 
     JUMPDEST , 
 
-    -- jump back
+    -- jump back using value on stack
     JUMP
+
   ]
 
-
+  writeFile "out.vm" ops
 
   putStrLn "whoot"
+
+
+
 
 -- abstraction
 --    push the body (jump point), env (address), and var on the stack - as three separate items? p120
@@ -100,7 +111,6 @@ main = do
 
 -- a lambda is also going to be responsible for knowing whether the arg on the stack is simple, or a env / memory  reference.
 
-
 -- abstraction - should just be a jumpdest and some code, andi
     -- C need to push the return address, and jump pop to return.
     -- E but also need the environment - can we push an address for environment to restore.
@@ -110,9 +120,6 @@ main = do
 
 -- apply
     -- push arg. push ret address. push current env?
-
-
-
 -- application
 
 -- OK - there's a problem. A builtin like codecopy can still be partially applied.
