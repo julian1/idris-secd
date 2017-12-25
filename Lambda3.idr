@@ -58,35 +58,37 @@ main = do
 -}
 
   -- ok compile, abstraction we have to push the stuff 
-
   -- only at apply should we push the argument... - and what about the env.
+
   let ops = the (List OpCode) [
 
-    {-
-    -- push return address... -- must be stack but could be a symbol
-    PUSH1 (Literal 5),
-    PC,                           -- push the current PC for the return address, must use this as stack...
-    ADD,
-    -}
+      PUSH1 (Literal 0x0),              -- some nops
+      PUSH1 (Literal 0x0),
+      PUSH1 (Literal 0x0),
 
-    ------------
-    PUSH1 (Symbol "cont" ),
-    -- push jump symbol and jump ..
-    PUSH1 (Symbol "mylambda"), 
-    JUMP,
-    -- return jumpdest
-    LABEL "cont", 
-    JUMPDEST , 
-    STOP,
-    STOP,
+      ------------
+      PUSH1 (Symbol "cont" ),           -- push the return continuation
+      PUSH1 (Symbol "mylambda"),        -- push call symbol
+      JUMP,                             -- actually jumping is equivalent to Apply
+    LABEL "cont",                     -- return label
+      JUMPDEST ,                        -- return jump dest 
+      STOP,
+      STOP,
 
-    ------------
-    -- my lambda function
+      ------------
+      -- my lambda function
     LABEL "mylambda", 
-    JUMPDEST , 
+      JUMPDEST , 
+      -- perform a computation and leave the result on the stack...
+      PUSH1 (Literal 0x12),
+      PUSH1 (Literal 0x3), 
+      ADD,
 
-    -- jump back using value on stack
-    JUMP
+      SWAP 1,
+      -- now we have to shuffle the damn jump point again... uggh...
+
+      -- jump back using value on stack
+      JUMP
 
   ]
 
