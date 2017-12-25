@@ -62,20 +62,25 @@ main = do
   -- only at apply should we push the argument... - and what about the env.
   let ops = the (List OpCode) [
 
-    -- push return address...
+    {-
+    -- push return address... -- must be stack but could be a symbol
     PUSH1 (Literal 5),
     PC,                           -- push the current PC for the return address, must use this as stack...
     ADD,
+    -}
 
+    ------------
+    PUSH1 (Symbol "cont" ),
     -- push jump symbol and jump ..
     PUSH1 (Symbol "mylambda"), 
     JUMP,
-  
     -- return jumpdest
+    LABEL "cont", 
     JUMPDEST , 
     STOP,
     STOP,
 
+    ------------
     -- my lambda function
     LABEL "mylambda", 
     JUMPDEST , 
