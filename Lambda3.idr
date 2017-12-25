@@ -67,27 +67,28 @@ main = do
       PUSH1 (Literal 0x0),
 
       ------------
-      PUSH1 (Symbol "cont" ),           -- push the return continuation
+      -- lbambda abstraction
       PUSH1 (Symbol "mylambda"),        -- push call symbol
+                                        -- then we would push the current environment.
+      -- lambda apply
+      PUSH1 (Symbol "cont" ),           -- push the return continuation
+      SWAP 1,                           -- and swap in the call...
       JUMP,                             -- actually jumping is equivalent to Apply
-    LABEL "cont",                     -- return label
+
+    LABEL "cont",                       -- return label
       JUMPDEST ,                        -- return jump dest 
-      STOP,
+      POP,
       STOP,
 
       ------------
       -- my lambda function
     LABEL "mylambda", 
       JUMPDEST , 
-      -- perform a computation and leave the result on the stack...
-      PUSH1 (Literal 0x12),
+      PUSH1 (Literal 0x12),             -- perform a computation and leave the result on the stack...
       PUSH1 (Literal 0x3), 
       ADD,
 
-      SWAP 1,
-      -- now we have to shuffle the damn jump point again... uggh...
-
-      -- jump back using value on stack
+      SWAP 1,                           -- swap the return value and return jump address.
       JUMP
 
   ]
