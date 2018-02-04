@@ -1,0 +1,40 @@
+
+to be useful - we need a lambda abstraction - as a basic code localisation/function/procedure mechanism.
+  - don't need full environment closure - actually kind of do - for symbol lookup - including symbols for lambdas.
+  - don't need environment structures - - lists - tuples - records - memory variables
+  - but environment might be simple - as just another
+
+compress the SECD to use a single stack
+stack.
+  lambda arg          S
+  env pointer         E
+  return pc address   C
+
+- add in memory vars - it becomes a lot more complicated to track.
+
+- inductive formal proofs - work at the level of lambda calc, and recursion
+    and elide the underlying evaluation mechanism - but we can't do that
+    since evm code can be called directly.
+
+----
+
+
+optimisations
+  - all the memory, stack overhead, and call overhead.
+    - possible a peephole optimiser would be enough 
+
+-----
+
+distinguish in memory vars, versus storage vars - can be done with backticks
+  x  <- mem env
+  x' <- storage env
+
+-----
+
+lambda abstraction
+  - push pc for lambda code onto stack
+  - push env pointer one stack
+
+  (so we have to be able to conceptually handle a stack tuple) - independent 
+  
+
